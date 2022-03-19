@@ -17,6 +17,10 @@ __
     - Finished the *Big Data with BigQuery* module. The third of five modules.
     - The [BigQuery demo](https://www.cloudskillsboost.google/course_sessions/887252/video/198822) was nicely done and the [BigQuery ML Lab](https://www.cloudskillsboost.google/course_sessions/887252/labs/198828) was very eye-opening (at least to me).
     - Start *Machine Learning Options on Google Cloud*. The fourth of five modules.
+    - Completed *Machine Learning Options on Google Cloud*.
+        - No lab in this module.
+        - Mostly marketing materials covering the various ML/AI options
+          and solutions that Google offers
 ..
 
 ----
