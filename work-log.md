@@ -5,11 +5,18 @@
 **Sat, 19 Mar 2022**
 __
 
-- Decided to finish the 
-- Continue working on the Big Data and Machine Learning Fundamentals
-  course
+- Finished the [`Google Cloud Essentials`](https://www.cloudskillsboost.google/public_profiles/70c3e8fe-77a0-45d9-a627-fa64f50ddafa) course.
+    - A fairly good intro to the Cloud Console and the very
+      comprehensive `gcloud` CLI
+    - I find that Google Cloud is more geared toward CLI usage, with the
+      UI a bit unwieldy and this is actually quite fine. Azure portal on
+      the other hand is more GUI centric probably which is also okay, I
+      suppose but CLI is better for repeatability and scripting.
 
-
+- Continued working on the Big Data and Machine Learning Fundamentals course
+    - Finished the *Big Data with BigQuery* module. The third of five modules.
+    - The [BigQuery demo](https://www.cloudskillsboost.google/course_sessions/887252/video/198822) was nicely done and the [BigQuery ML Lab](https://www.cloudskillsboost.google/course_sessions/887252/labs/198828) was very eye-opening (at least to me).
+    - Start *Machine Learning Options on Google Cloud*. The fourth of five modules.
 ..
 
 ----
