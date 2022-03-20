@@ -2,6 +2,20 @@
 <small>A chronological log of the things I'm doing to get to my goal of becoming a Cloud Data Engineer.</small>
 
 ----
+**Sun, 20 Mar 2022**
+__
+
+- Continued working on the Big Data and Machine Learning Fundamentals course
+    - Start *The Machine Learning Workflow with Vertex AI*. The last of five modules.
+    - [Completed](https://www.cloudskillsboost.google/public_profiles/70c3e8fe-77a0-45d9-a627-fa64f50ddafa/badges/1774516) the module and the course.
+    - <img src="img/notes-completion-big-data-machine-learning.png" alt="" width="30%"/>
+- Start the next course: [Modernizing Data Lakes and Data Warehouses with Google Cloud](https://www.cloudskillsboost.google/course_templates/54)
+    - Start *Introduction to Data Engineering*. The first of three modules.
+    - Completed *Introduction to Data Engineering*. The first of three modules.
+        - This module feels rather haphazard
+..
+
+----
 **Sat, 19 Mar 2022**
 __
 

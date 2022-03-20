@@ -4,9 +4,210 @@
 ### Credentials
 __
 
-- Google Cloud Essentials
-- See: [Latest Credentials](https://www.cloudskillsboost.google/public_profiles/70c3e8fe-77a0-45d9-a627-fa64f50ddafa)
-- <img src="img/notes-credentials.png" alt="" width="80%"/>
+- List of credential earned:
+    - <img src="img/notes-credentials.png" alt="" width="60%"/>
+    - See: [Current Credentials](https://www.cloudskillsboost.google/public_profiles/70c3e8fe-77a0-45d9-a627-fa64f50ddafa)
+..
+
+
+----
+### Fun, short intros to Google Cloud offerings
+__
+
+- https://github.com/priyankavergadia/google-cloud-4-words
+- https://github.com/priyankavergadia/GCPSketchnote
+- https://www.youtube.com/playlist?list=PLIivdWyY5sqIQ4_5PwyyXZVdsXr3wYhip
+..
+
+----
+### Roles, Responsiblities, Project Plans
+__
+
+- Roles: Data Engineer
+- Responsibilities:
+    - Ingest
+    - ETL
+    - Monitoring: Capacity, Performance
+    - Modify: ML team wants more data
+    - Data access and governance
+    - Metadata management
+        - Tool: Cloud Data Catalog
+- Tools:
+    -
+- Project Plans
+
+
+..
+
+
+----
+### Lab: Vertex AI: Predicting Loan Risk with AutoML
+__
+
+Sun, 20 Mar 2022 (2h30m / 5 Credits)
+- Course: [Google Cloud Big Data and Machine Learning Fundamentals](https://www.cloudskillsboost.google/course_templates/3)
+
+- Goals:
+    - Use AutoML to build a machine learning model to predict loan risk
+    - 2,050 data points from financial institution
+    - AutoML requires minimum 1,000 data points
+
+- Tasks:
+    - Task 1: Prepare the training data
+    - Task 2: Train your model
+    - Task 3: Evaluate the model performance 
+    - Task 4: Deploy the model
+    - Task 5: Shared Machine Learning (SML) Bearer Token
+    - Task 6: Get predictions
+
+- Notes:
+    - [Vertex Pricing](https://cloud.google.com/vertex-ai/pricing?_ga=2.181173863.-1790764198.1647754986)
+    - [Vertex AI documentation](https://cloud.google.com/ai-platform-unified/docs)
+    - [Google Machine Learning Crash Course](https://developers.google.com/machine-learning/crash-course/classification/roc-and-auc)
+
+- Task 1: Prepare the training data
+    - Navigation menu > Vertex AI
+    - Create dataset name: LoanRisk
+    - Upload data options:
+        - Upload a local file from your computer.
+        - Select files from Cloud Storage.
+        - Select data from BigQuery.
+    - Import from Cloud Storage:
+        - spls/cbl455/loan_risk.csv
+    - Generate statistics
+        - To see statistics of loans data
+            - Total rows: 2,050
+            - Age: 2048 distinct values
+            - ClientID: 2,050 distinct values
+            - Default: 2 distinct values
+            - Income: 2050 distinct values
+            - Loan: 2050 distinct values
+
+- Task 2: Train your model
+    - Strangely, the dataset name expected is "LoanRisk"
+    - Set Objective = Classification
+    - Model Details:
+        - Model name: LoanRisk
+        - Target column: Default
+        - Advanced Model Options:
+            - To determine training vs testing data & setup encryption
+    - Training options
+        - Specify columns (features) to include in training model
+        - Exclude: ClientID
+        - Advanced Training Options:
+            - Can select different optimization objectives
+            - See: https://cloud.google.com/vertex-ai/docs/training/tabular-opt-obj
+    - Compute & Pricing
+        - Set Budget: 1 (node hours)
+            - 1 compute hour is a good start
+        - Early Stopping: Enabled
+        - Click: Start training
+
+- Task 3: Evaluate the model performance (demo only)
+    - This task is demo-only, no real hands-on cos the training takes an hour
+    - On [ROC Curve and AUC](https://developers.google.com/machine-learning/crash-course/classification/roc-and-auc)
+    - Navigate > Vertex AI > Models
+    - Click on model trained > Evaluate
+    - Possible to manually adjust the confidence threshold
+        - <img src="img/notes-confidence-threshold.png" alt="" width="80%"/>
+        - In image above, looking at the Precision-recall by threhold
+          graph on the right, I'd raise the threshold to about 0.72
+          because higher values result in lower recall. But the actual
+          change will depend on the business case
+
+- Task 4: Deploy the model (demo only)
+    - This task is demo-only, no real hands-on cos the training takes an hour
+    - Create and define an endpoint
+        - Navigate to model page > Deploy and test
+        - Click: Deploy to endpoint
+        - Endpoint name: LoanRisk
+        - Click: Continue
+    - Model settings and monitoring
+        - Traffic splitting settings: Unchanged
+        - Machine type: n1-standard-8, 8 vCPUs, 30 GiB memory
+        - All other settings: Unchanged
+        - Click: Deploy
+
+- Task 5: Shared Machine Learning (SML) Bearer Token
+    - This is to get a token to use the ML model for prediction
+    - Prepare Task 6 before doing the below:
+        - Log in to https://gsp-auth-kjyo252taq-uc.a.run.app/
+        - Copy token to clipboard
+            - Token is available for about 60secs.
+
+- Task 6: Get predictions
+    - Setup environment variables needed:
+    - AUTH_TOKEN: To access the endpoint
+    - ENDPOINT: The ML predict endpoint
+    - INPUT_DATA_FILE: Input file containing features as JSON
+
+```
+# Download files used
+gsutil cp gs://spls/cbl455/cbl455.tar.gz .
+tar -xvf cbl455.tar.gz
+
+# Setup environment variables:
+AUTH_TOKEN="INSERT_SML_BEARER_TOKEN"
+ENDPOINT="https://sml-api-vertex-kjyo252taq-uc.a.run.app/vertex/predict/tabular_classification"
+INPUT_DATA_FILE="INPUT-JSON"
+
+# Make request using smlproxy
+# smlproxy is a binary executable to communicate with the backend
+./smlproxy tabular \
+  -a $AUTH_TOKEN \
+  -e $ENDPOINT \
+  -d $INPUT_DATA_FILE
+```
+..
+
+
+----
+### Confusion Matrix, Recall and Precision
+__
+
+- Confusion Matrix defines the following:
+    - True Positive   TP   Predicted 🐈 Cat / Turned out to be 🐈 Cat   ✔️
+    - True Negative   TN   Predicted 🐕 Dog / Turned out to be 🐕 Dog   ✔️
+    - False Positive  FP   Predicted 🐈 Cat / Turned out to be 🐕 Dog   ❌
+    - False Negative  FP   Predicted 🐕 Dog / Turned out to be 🐈 Cat   ❌
+
+- Helps to think of the confusion matrix as follows:
+    - Predictions come first, the actual values come later and compared
+      to prediction
+    - We are typically interested in Positive predictions
+    - Hence the Recall and Precision are useful metrics
+    - Negative predictions can easily be turned into positive
+      predictions
+
+- Recall almost 1     ⇒  Very few false negatives
+    - Missed some which were actually positive, hence imperfect recall
+    - Like having to recall a list of 16 items, and of the 16 items
+      remembered, some were not in the original list. Imperfect recall.
+    - TP / (TP + FN)
+    - Question: Did you get all of them right?
+
+- Precision almost 1  ⇒  Very few false positives
+    - Lots of positive predictions but some turned out to be false
+    - Like shooting at real and fake ducks, some ducks turned out to be
+      fake, hence imperfect precision
+    - TP / (TP + FP)
+    - Of all the ones you shot, how many were what you aimed for?
+..
+
+
+----
+### Feature Store
+__
+
+- The Feature Store in Vertex AI has the result of making features
+  [first class
+  objects](https://www.cs.iusb.edu/~danav/teach/c311/c311_2_firstclass.html)
+  in AI. This is just fancy speak for making features the priority.
+- And making it a priority means make it easy to work with, to organize,
+  to store, to aggregate, to share, to reuse, etc.
+- This leads to the interesting question:
+    - What are the priority objects in different stages of the Data
+      Engineering workflow?
 ..
 
 
