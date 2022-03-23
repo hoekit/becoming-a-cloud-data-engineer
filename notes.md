@@ -11,6 +11,18 @@ __
 
 
 ----
+### Columnar Databases
+
+- VLDB 2009 Tutorial on Column-Oriented Database Systems [web](http://nms.csail.mit.edu/~stavros/pubs/tutorial2009-column_stores.pdf) | [local](tutorial2009-column_stores.pdf)
+    - Interesting slides on what goes on under the hood in columnar databases.
+
+- Inside Capacitor, BigQuery's next generation columnar storage format, 2016 [web](https://cloud.google.com/blog/products/bigquery/inside-capacitor-bigquerys-next-generation-columnar-storage-format)
+    - Covers the storage system used in BigQuery
+    - Storage system is one major component, the other is the execution engine
+
+- Azure has Columnstore Indexes within SQL Server, 2021 [web](https://web.archive.org/web/20211214211514/https://docs.microsoft.com/en-us/sql/relational-databases/indexes/get-started-with-columnstore-for-real-time-operational-analytics?view=sql-server-ver15)
+
+----
 ### Fun, short intros to Google Cloud offerings
 __
 
@@ -20,22 +32,112 @@ __
 ..
 
 ----
-### Roles, Responsiblities, Project Plans
+### Serverless vs Managed Service
 __
 
-- Roles: Data Engineer
+- Managed Service
+    - Means: No setup, no management e.g. backup, replication, scaling
+    - Examples:
+        - DataProc
+
+- Serverless
+    - Means: Managed-Service + Event-driven/API endpoints
+    - Examples:
+        - BigQuery
+        - DataFlow
+        - Pub/Sub
+        - Cloud Storage
+..
+
+----
+### Roles, Responsiblities, Tasks
+__ Roles and Responsibilities
+
+- Role: Data Engineer
 - Responsibilities:
+    - Analyze, Explore a dataset
     - Ingest
     - ETL
     - Monitoring: Capacity, Performance
     - Modify: ML team wants more data
+    - Design Schema
     - Data access and governance
     - Metadata management
         - Tool: Cloud Data Catalog
-- Tools:
-    -
-- Project Plans
 
+- Role: Data Warehouse Engineer
+    - Responsiblities:
+        - Develop batch data pipelines
+        - Develop streaming data pipelines
+        - Support adhoc queries, visualization, reporting
+        - Support machine learning
+        - Manage security and governance
+
+- Role: DBA
+    - Responsibilities:
+        - Backup & Recovery
+            - Design Snapshots for quick recoveries
+        - Scaling
+        - Managing replicas
+        - Encryption
+        - Security & Patches
+        - Vertical Scaling
+        - Horizontal scaling (replicas)
+        - Replication and Failover
+
+- Role: ETL Engineer
+    - Responsibilities
+        - Logging: Log metadata, monitor logs
+        - Documentation
+        - Develop Load Processes
+            - Capture Load Process logs and metadata
+    - References:
+        - https://www.timmitchell.net/post/2020/12/21/etl-antipattern-ignore-the-logging
+..
+__ Responsibilities and Tasks
+
+- Analyze, Explore a dataset (Data Engineer)
+    - Use SQL to quickly analyze, explore a dataset
+        - How many tables
+        - How many columns
+        - Any columns partitioned or clustered
+        - What's the data size
+        - When was table last updated
+        - Unique values per column
+        - Null values per column
+
+- Detect and handle late-arriving data
+    - Data backfills
+
+- Manage Security (Data Warehouse Engineer)
+    - Encryption
+    - Authentication
+        - Configure accounts
+    - Access control
+        - Setup roles
+            - Configure Read Permissions
+            - Configure Write/Update Permissions
+        - Assign access to roles
+        - Row-level access policy
+    - Audit logs (immutable logging)
+        - Admin activity, System event, Data access
+    - Log Monitoring
+
+- Data access and governance
+    - Define roles and authorization
+    - Setup IAM roles and permissions
+    - Setup Row-level security
+    - Setup Authorized Views
+    - Setup Access to Dataset, Columns, Rows
+    - Restrict columns
+    - Sharing Datasets
+
+- Logging (ETL Engineer)
+    - Things to log: Admin activity, System Event, Data Access
+    - Logging needs to be [immutable](https://towardsdatascience.com/data-mesh-patterns-immutable-change-audit-log-aec93da33648)
+
+- Design Schema (Data Engineer)
+    - 
 
 ..
 
@@ -196,18 +298,26 @@ __
 
 
 ----
-### Feature Store
+### First Class Objects
 __
 
-- The Feature Store in Vertex AI has the result of making features
-  [first class
-  objects](https://www.cs.iusb.edu/~danav/teach/c311/c311_2_firstclass.html)
-  in AI. This is just fancy speak for making features the priority.
-- And making it a priority means make it easy to work with, to organize,
-  to store, to aggregate, to share, to reuse, etc.
-- This leads to the interesting question:
-    - What are the priority objects in different stages of the Data
-      Engineering workflow?
+- Google Feature Store
+    - The Feature Store in Vertex AI has the result of making features
+      [first class
+      objects](https://www.cs.iusb.edu/~danav/teach/c311/c311_2_firstclass.html)
+      in AI. This is just fancy speak for making features the priority.
+    - And making it a priority means make it easy to work with, to
+      organize, to store, to aggregate, to share, to reuse, etc.
+    - This leads to the interesting question:
+        - What are the priority objects in different stages of the Data
+          Engineering workflow?
+
+- Data Warehouses
+    - The first class objects in Data Warehouses should to be schema?
+    - Schema should be easy to work with, to organize, to manage
+    - Schema should be fluid, composable and all the nice buzzwords
+    - Maybe..
+
 ..
 
 

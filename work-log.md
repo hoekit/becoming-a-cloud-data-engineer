@@ -2,6 +2,35 @@
 <small>A chronological log of the things I'm doing to get to my goal of becoming a Cloud Data Engineer.</small>
 
 ----
+**Wed, 23 Mar 2022**
+__
+
+- Completed the course: [Modernizing Data Lakes and Data Warehouses with Google Cloud](https://www.cloudskillsboost.google/course_templates/54)
+    - <img src="img/notes-completion-modernizing-data-lakes-and-data-warehouses.png" alt="" width="30%"/>
+    - I have a better appreciate of Google Cloud Storage and Google
+      BigQuery as Google's Data Lake and Data Warehouse solutions
+    - Demos in the course were nice and brisk
+    - Lab's were ok, would be nice to have some "Challenge" questions
+- The next course is [Building Batch Data Pipelines on Google Cloud](https://www.cloudskillsboost.google/course_templates/53)
+    - Enough for today. I'll start on it tomorrow.
+..
+
+----
+**Mon, 21 Mar 2022**
+__
+
+- Continue the course: [Modernizing Data Lakes and Data Warehouses with Google Cloud](https://www.cloudskillsboost.google/course_templates/54)
+    - Started on *Building a Data lake*. The second of three modules.
+    - Completed *Building a Data lake*. The second of three modules.
+        - Materials are still rather haphazardly organized with lots of
+          repetition. Lab is rather simplistic. Maybe because it's still
+          introductory level. But then Data Lakes are rather simplistic
+          just Extract and Load.
+        - Found some interesting features of Cloud Storage though.
+    - Started on *Building a Data Warehouse*. The last of three modules.
+..
+
+----
 **Sun, 20 Mar 2022**
 __
 
