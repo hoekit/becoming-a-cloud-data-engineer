@@ -1,6 +1,12 @@
 # Notes on Cloud Data Engineering
 
 ----
+### Good Blogs & Articles References
+- Wikipedia on Data Quality [web](https://en.wikipedia.org/wiki/Data_quality)
+- Liliendahl on Data Quality [web](https://liliendahl.com/data-quality-3-0)
+- Has a good list of references at the bottom [web](https://profisee.com/data-quality-what-why-how-who/)
+
+----
 ### Credentials
 __
 
@@ -11,7 +17,94 @@ __
 
 
 ----
+### Compare and contrast technologies
+__
+
+- Apache Spark vs Apache Beam
+    - allegro.tech experience report, 2021 [web](https://blog.allegro.tech/2021/06/1-task-2-solutions-spark-or-beam.html)
+        - A good write-up
+        - Conclusion: Dataflow is more expensive, Dataproc is cheaper.
+          So, essentially trading Dataflow cost for developer cost
+    - A blog article circa 2016 [web](https://mpouttuclarke.wordpress.com/2016/02/06/apache-beam-vs-apache-spark-comparison/)
+    - An SO question circa May 2017 [so](https://stackoverflow.com/questions/43581127)
+..
+
+----
+### Notion of Component Gateway
+__
+
+- In Google Cloud Dataproc, there is the notion of a `Component
+  Gateway`. It allows tools commonly associated with Apache Spark to be
+  connected to the cluster.
+- This is interesting in the sense that the backend setup and
+  configuration is automated.
+..
+
+
+----
+### List of Compatible OS, Hadoop, Spark
+__
+
+```
+- Debian 10         , Hadoop 3.2, Spark 3.1
+- RockyLinux 8      , Hadoop 3.2, Spark 3.1
+- Ubuntu 18.04 LTS  , Hadoop 3.2, Spark 3.1
+
+- CentOS 8          , Hadoop 2.10, Spark 2.4
+- Debian 10         , Hadoop 2.10, Spark 2.4
+- Ubuntu 18.04 LTS  , Hadoop 2.10, Spark 2.4
+
+- Debian 10         , Hadoop 2.9, Spark 2.4
+- Ubuntu 18.04 LTS  , Hadoop 2.9, Spark 2.4
+
+- Debian 10         , Hadoop 2.9, Spark 2.3
+- Ubuntu 18.04 LTS  , Hadoop 2.9, Spark 2.3
+```
+
+
+..
+
+
+----
+### Other Quick Bites
+__
+
+- Hadoop Cluster Size Calculation [web](https://www.youtube.com/watch?v=0ni6i8XkG88)
+    - Key items:
+        - Est. Overhead: 20% per node
+        - Replication Factor contributes 3X
+        - Intermediate contributes 1X
+        - Est. Compression Factor: 2.3X
+        - Est. Utilization Rate: 65%
+        - Est. Data Growth Rate
+- It's amazing what you can quickly learn online
+
+- Spark Tutorial
+    - A great Spark 2.0 demo at Spark SUMMIT 2016 [web](https://www.youtube.com/watch?v=2Qj1b4TruKA)
+    - Data Engineering on databricks Demo, 2021 [web](https://www.youtube.com/watch?v=6Q8qPZ7c1O0)
+        - Databricks is at v3.4.7 in 2021
+    - Contrasts Spark and Hadoop [web](https://www.youtube.com/watch?v=QaoJNXW6SQo)
+        - Databricks is a private company by the core developers of Spark
+        - RDD: Resilient Distributed Datasets
+
+- Delta Lakes [web](https://delta.io/) | [azure](https://docs.microsoft.com/en-us/azure/databricks/delta/delta-intro)
+    - Evolution of Data Lakes and Data Warehouses into Lakehouses
+
+..
+
+
+----
+### Some books on Skillsoft
+__
+
+- Snowflake Security: Security Your Snowflake Data Cloud, 2021 [web](https://orange.hosting.lsoft.com/trk/click?ref=znwrbbrs9_6-2e46bx332778x036174&)
+
+..
+
+
+----
 ### Columnar Databases
+__
 
 - VLDB 2009 Tutorial on Column-Oriented Database Systems [web](http://nms.csail.mit.edu/~stavros/pubs/tutorial2009-column_stores.pdf) | [local](tutorial2009-column_stores.pdf)
     - Interesting slides on what goes on under the hood in columnar databases.
@@ -21,6 +114,8 @@ __
     - Storage system is one major component, the other is the execution engine
 
 - Azure has Columnstore Indexes within SQL Server, 2021 [web](https://web.archive.org/web/20211214211514/https://docs.microsoft.com/en-us/sql/relational-databases/indexes/get-started-with-columnstore-for-real-time-operational-analytics?view=sql-server-ver15)
+..
+
 
 ----
 ### Fun, short intros to Google Cloud offerings
@@ -50,6 +145,47 @@ __
 ..
 
 ----
+### On Pseudo Benefits
+__
+
+- Pseudo benefits are things that sound like benefits but may not be.
+    - An example is the availability of many choices to do something
+    - Choices introduces complexity and the need to manage that
+      complexity
+    - If one selects the simplest option in a bevy of choices and simply
+      stick to that, then it may help simplify the entire architecture
+
+- In contrast, the ability to auto-scale is a true benefit
+    - But only if you have lots of compute/storage and don't know what
+      to do with them
+..
+
+----
+### On Data Lineage
+__
+
+- In a recent development project, one of the things I find nice-to-have
+  is the ability to know the call dependency graph.
+    - A call stack is the list of function calls leading to the current
+      function call. A call dependency graph would be a DAG going
+      backwards from the current function to all the functions that can
+      possibly call this function.
+    - Why is this useful? When there is a problem with a function, the
+      function will get modified as part of the fix. Knowing the
+      dependency graph is useful because I'll know who will may get
+      impacted upstream.
+    - Another use of the call dependency graph is to work backwards to
+      find impacted services and only restart those services to use the
+      updated version of the function.
+
+- How is that related to data lineage?
+    - It's analogous. When there is a problem with data downstream. I'd
+      like to be able to trace back to how that problem data was
+      processed upstream.
+
+..
+
+----
 ### Roles, Responsiblities, Tasks
 __ Roles and Responsibilities
 
@@ -57,10 +193,12 @@ __ Roles and Responsibilities
 - Responsibilities:
     - Analyze, Explore a dataset
     - Ingest
-    - ETL
+    - Design Schema
+    - Design and Implement Batch Data Pipelines
+    - Design and Implement Streaming Data Pipelines
+    - Design and Implement Data Quality Transforms
     - Monitoring: Capacity, Performance
     - Modify: ML team wants more data
-    - Design Schema
     - Data access and governance
     - Metadata management
         - Tool: Cloud Data Catalog
@@ -95,6 +233,56 @@ __ Roles and Responsibilities
         - https://www.timmitchell.net/post/2020/12/21/etl-antipattern-ignore-the-logging
 ..
 __ Responsibilities and Tasks
+
+
+- Metadata management
+    - Data lineage management
+        - Start with adding labels
+            - A label is a key, value pair
+            - To datasets, tables, views
+
+- Design and Implement Data Quality Transforms (DQT)
+    - Roles: Data Engineer
+    - Guildeline: Implement DQTs only when poor data quality interferes
+      with data analysis and leads to poor business decisions.
+    - Types of DQ Issues:
+        - Not Valid
+            - Problem: Data does not conform to your business rules
+            - Example: $7 dollar transaction for standard movie ticket
+              price of $10
+            - Examples: Out of range, Empty/Null fields
+        - Not Accurate
+            - Problem: Data does not conform to an objective true value
+            - Examples: Lookup issues, Datasets do not exist
+        - Not Complete
+            - Problem: Unable to analyze full dataset
+            - Example: Failed to create, save and store whole datasets
+            - Causes: Corrupted Data
+        - Not Consistent
+            - Problem: Two different computations from data ought to be
+              the same but are not, so unable to proceed because do not
+              know which to trust
+            - Duplicate records
+        - Not Uniform
+            - Problem: When values in the same column but different rows
+              mean different things
+            - Example: Value of 10 in one row has the unit meters and the
+              other has the unit of feett
+    - Common DQ Problems:
+        - Invalid data
+            - Tools: Filter rows/aggregates invalid data
+        - Duplication
+        - Uniform
+            - SQL CAST()
+            - SQL FORMAT() [web](https://cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#format_string)
+
+- Design and Implement Batch Data Pipelines
+    - Roles: Data Engineer, Data Warehouse Engineer
+    - Choose EL, ELT or ETL
+        - Key consideration is how much transformation is needed
+    - Design pipeline
+    - Design execution triggers
+        - Google Tools: Cloud Composer, Cloud Functions, Scheduled queries
 
 - Analyze, Explore a dataset (Data Engineer)
     - Use SQL to quickly analyze, explore a dataset
@@ -139,6 +327,46 @@ __ Responsibilities and Tasks
 - Design Schema (Data Engineer)
     - 
 
+..
+__ Case Studies
+
+- You are building data pipelines. Some steps require call an API such
+  as the Translate APi to augment/transform data. Another part of the
+  pipeline requires processing more suited for procedural programming.
+  What do you do:
+    - Since the transformations cannot be expressed in SQL or are too
+      complex to do in SQL, these transformations should be done in an
+      ETL fashion.
+    - Build an ETL pipeline
+    - Implement the transforms in Dataflow, Dataproc, or use Data Fusion
+      GUI to build pipelines
+
+- There are some gaps in historical data. What are you going to do?
+    - Discuss with the business users
+    - Backfill with augmented data with the same distribution generated
+      from the previous three years of data
+
+- Need to batch load historical data. Data is clean and correct:
+    - Since data is clean and correct, no further transformation needed
+    - Use EL data pipeline
+        - File hits Cloud Storage
+        - Cloud Function invokes BigQuery load
+        - Table appended to
+    - To expose loaded file for use:
+        - Table stored in private dataset
+        - Public view that performs integrity checks
+        - SQL query transforms and creates destination public table
+
+- You create an image service. Users upload lots of images. The Vision
+  API is used to identify objects in the image. How would you store this
+  data for unknown future analysis?
+    - The Vision API returns JSON data.
+    - Since future use cases is unknown, the raw JSON data and a pointer
+      to the original image should be stored.
+    - This is an ELT pipeline
+    - EL the image and JSON
+    - Later, transforms may be applied to query the JSON to extract
+      required data
 ..
 
 
@@ -1460,5 +1688,38 @@ __
     - Google Cloud Essentials
         - https://www.cloudskillsboost.google/quests/23
         - 4 hours / Introductory / 5 Credits
+..
+
+__ Microsoft Certifications
+
+- Azure Data Fundamentals DP-900 [skillport](https://acm.skillport.com/skillportfe/main.action?path=summary/BOOKS/157587#browse/12aea111-8721-4ba8-9ceb-c8d382043faf)
+
+- Azure Data Engineer Associate [DP-203] [skillport](https://acm.skillport.com/skillportfe/main.action?path=summary/BOOKS/157587#browse/425ca390-aa45-4de4-b9cd-f746020f076a)
+
+- MCSE: Data Management and Analytics [skillport](https://acm.skillport.com/skillportfe/main.action?path=summary/BOOKS/157587#browse/fd1727c3-3cf1-4b18-9583-7ca5eb852f3b)
+
+..
+
+__ Databricks Training
+..
+
+__ Google
+
+- Google Data Engineer [skillport](https://acm.skillport.com/skillportfe/main.action?path=summary/BOOKS/157587#browse/7bcdd429-959d-4f02-baf8-78edb874b6b5)
+
+..
+
+
+----
+### Unsorted notes from Azure DP-900
+__
+
+Notions of:
+    - Data Workloads
+    - Workload SLAs
+    - Workload Classification, Importance and Isolation
+
+- A Graph Database
+    - Could be useful for dependency graphs
 ..
 

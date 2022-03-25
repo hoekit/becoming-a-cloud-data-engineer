@@ -2,6 +2,43 @@
 <small>A chronological log of the things I'm doing to get to my goal of becoming a Cloud Data Engineer.</small>
 
 ----
+**Fri, 25 Mar 2022**
+__
+
+- Continue course [Building Batch Data Pipelines on Google Cloud](https://www.cloudskillsboost.google/course_templates/53)
+    - Continue the second module: *Executing Spark on Dataproc*
+        - Decided to spend more time on the lab, understanding it in more detail
+    - Completed the second module: *Executing Spark on Dataproc*
+        - The lab made sense after awhile. In a nutshell, starting
+          clusters, using Jupyter to create a Python script, launching
+          the script and monitoring jobs and stopping the cluster
+    - Started the third module: *Server Data Processing with Dataflow*
+        - Still trudging through it but the going is slow as I try to
+          make sense of Apache Beam vs Apache Spark and compare and
+          contrast them.
+..
+
+----
+**Thu, 24 Mar 2022**
+__
+
+- Start course [Building Batch Data Pipelines on Google Cloud](https://www.cloudskillsboost.google/course_templates/53)
+    - The second of four courses in the Data Engineering on Google Cloud
+      course series. There are four modules in this course.
+    - Started the first module: *Introduction to Building Batch Data Pipelines*
+    - Completed the first module: *Introduction to Building Batch Data Pipelines*
+        - Has some good slides on Data Quality
+    - Started the second module: *Executing Spark on Dataproc*
+    - I found the lab rather incomprehensible and instead drifted to get
+      myself up to speed on Spark. Ended up looking at Databricks demos
+      and reading up Lakehouses and so on.
+    - Also, found similar courses on ACM Skillport. Microsoft Azure Data
+      Fundamentals and Data Engineer is there. So are several other
+      certifications from Amazon and Google. However, Google Data
+      Engineer is not there.
+..
+
+----
 **Wed, 23 Mar 2022**
 __
 
