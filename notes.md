@@ -17,6 +17,64 @@ __
 
 
 ----
+### Maven
+__
+
+- What is Maven:
+    - A build tool that helps in project management
+        - Generate source code
+        - Generates docs
+        - Compiles source code
+        - Downloads libraries
+        - Packages compiled codes into JAR files
+        - Installing packaged code in local repo or central repo
+    - Based on Project Object Model (POM)
+        - An XML file that contains info regarding project and configuration
+          details
+        - Essential file is pom.xml
+    - Used to build and manage Java-based project. Simplifies daya to
+      day work of Java developers
+
+- Maven solves the following problems:
+    - Ensure needed JAR files are available
+    - Downloads dependencies from mvnrepository.com
+    - Creates the right project structure
+    - Builds and deploys the project
+
+- Understanding pom.xml
+    - https://www.youtube.com/watch?v=KNGQ9JBQWhQ
+    - A Project is defined uniquely by:
+        - groupID
+        - artifactID
+        - version
+    - Maven UIDs = groupID + artifactID + version
+    - Depencies are also refered to via Maven UIDs
+    - project
+        - The root element in pom.xml
+    - parent
+        - to inherit from another pom.xml file
+    - dependencies
+        - container for dependency
+    - dependency
+        - a Maven UID that the current project depends on
+    - build.plugins
+        - container for plugins
+    - build.plugins.plugin
+        - A Maven UID of plugins needed during the build process
+
+- Understanding Maven Archetypes
+    - https://www.youtube.com/watch?v=U3AvNVT5j8w
+    - A maven template built using Quarkus
+        - A repeatedly usable archetype
+        - Jackson for serailization
+        - Panache for DB access
+        - SmallRye OpenAI documentation
+        - sonar-maven for Static Code analysis
+        - pitest-junit5-plugin for mutation modification tests
+..
+
+
+----
 ### Compare and contrast technologies
 __
 
