@@ -2,6 +2,29 @@
 <small>A chronological log of the things I'm doing to get to my goal of becoming a Cloud Data Engineer.</small>
 
 ----
+**Mon, 28 Mar 2022**
+__
+
+- Continue course [Building Batch Data Pipelines on Google Cloud](https://www.cloudskillsboost.google/course_templates/53)
+    - Continue the third module: *Server Data Processing with Dataflow*
+        - Was out of action for two days due to a Moderna booster jab
+          that left me with a headache that preempted any kind of work
+    - Spent some time learning Maven, which is needed in one of the
+      labs. A quick intro to pom.xml files, Maven UIDs and maven
+      archetypes.
+    - Completed the third module: *Server Data Processing with Dataflow*
+        - Quite a good intro to Dataflow and various concepts within it.
+        - Apache BEAM still utilizes the concepts of MapReduce but the
+          incantation is different and the pipeline nature of the pipe
+          is very clear
+        - The differentiator here could possibly be templates
+        - The challenge of Map-Reduce is not complexity but scale. It
+          requires a different way of thinking about problems i.e.
+          largely by splitting things up and then grouping them back in
+          a way that can be parallelized.
+..
+
+----
 **Fri, 25 Mar 2022**
 __
 
