@@ -2,6 +2,17 @@
 <small>A chronological log of the things I'm doing to get to my goal of becoming a Cloud Data Engineer.</small>
 
 ----
+**Tue, 29 Mar 2022**
+__
+
+- Completed course [Building Batch Data Pipelines on Google Cloud](https://www.cloudskillsboost.google/course_templates/53)
+    - Pretty good intro to using BigQuery, Dataproc, DataFlow, Cloud
+      Data Fusion (CDAP) and Cloud Composer (Apache Airflow) in building
+      batch data pipelines
+    - For some reason, my badge [profile](https://www.cloudskillsboost.google/public_profiles/70c3e8fe-77a0-45d9-a627-fa64f50ddafa) does not show the completion.. Maybe it will be eventually consistent :).
+..
+
+----
 **Mon, 28 Mar 2022**
 __
 
