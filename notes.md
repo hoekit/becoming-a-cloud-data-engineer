@@ -17,7 +17,179 @@ __
 
 
 ----
-### Maven
+### ETL Design Patterns
+__
+
+- Ingest data:
+    - On success, move source data to "Archive"
+    - On error, flag error, move source data to "Archive"
+
+- Rolling Windows:
+    - Make data windows an input parameter
+    - Start and end date of the rolling window can be derived from
+      job schedule date. Run dates are not suitable because re-runs will
+      then not be idempotent.
+
+- Workflow Scheduling
+    - Also known as triggering jobs
+    - It could be periodic (Pull)
+        - This is named Pull cos periodically look into a folder then "Pull"
+    - It could be event-driven (Push): e.g. triggered by new file in a folder
+        - This is Push because file if Pushed to folder and that triggers
+..
+
+
+----
+### Google Cloud Composer
+__
+
+- Managed Apache Airflow as a Service
+
+- What is it: An Orchestrator
+    - Orchestrates: Google Cloud Services
+
+- Contrast with: Google Cloud Data Fusion
+    - Orchestrates: ETL Steps
+..
+
+
+----
+### Google Cloud Functions
+__
+
+The function is written in Javascript. Mostly boilerplate code.
+
+..
+
+
+----
+### Apache Airflow
+__
+
+- Airflow [web](https://airflow.apache.org/)
+
+- Executes tasks on an array of workers e.g.
+    - Google Kubernetes engine workers
+
+- DAG [web](https://airflow.apache.org/docs/apache-airflow/stable/concepts/dags.html)
+    - A Directed Acyclic Graph is a collection of all the tasks you want
+      to run, organized in a way that reflects their relationships and
+      dependencies.
+
+- Operator [web](https://airflow.apache.org/docs/apache-airflow/stable/concepts/operators.html)
+    - The description of a single task, it is usually atomic. For
+      example, the BashOperator is used to execute bash command.
+
+- Task [web](https://airflow.apache.org/docs/apache-airflow/stable/concepts/tasks.html)
+    - A parameterised instance of an Operator; a node in the DAG.
+
+- Task Instance [web](https://airflow.apache.org/docs/apache-airflow/stable/concepts/tasks.html#task-instances)
+    - A specific run of a task; characterized as: a DAG, a Task, and a
+      point in time. It has an indicative state: running, success,
+      failed, skipped, ...
+
+- More concepts [web](https://airflow.apache.org/concepts.html#)
+
+- Relies on 'Operators' to invoke services
+    - See: https://airflow.apache.org/integration.html
+
+- Airflow workflows are written in Python using 'Operators'
+    - Parameterization can be done using macros
+
+- Airflow visually represents the workflow in a Directed Acyclic Graph (DAG)
+
+- Allows multi-cloud integration
+    - Unlikely in practice due to egress charges
+
+- Why AirFlow?
+    - Visualization of workflow?
+    - Visualization has job-completion-status indicators: Green|Pink|Red|etc
+    - A simple dashboard of success|failed jobs
+        - How to specify window?
+    - Easily access logs of failed steps
+
+- Support triggers via POST requests
+
+- Auto retry N times supported
+..
+
+
+----
+### Vertex AI
+__
+
+- Formerly called Cloud ML Engine
+
+..
+
+
+----
+### Google Cloud Data Fusion
+__
+
+- Managed CDAP as a Service
+
+- What is it: An Orchestrator
+    - Orchestrates: ETL Steps
+
+..
+
+
+----
+### Azure Data Explorer
+__
+
+- Source: Sent from Websites, Application, IoT
+
+- Scales quickly
+    - Uses Kusto Query Language, read-only
+    - NoSQL under the hood
+
+- Data Collection
+    - IoT Hubs
+    - Event Hubs
+- Ingestion
+- Storage
+- Indexing structured and non-structured
+- Querying
+- Visualization: Power BI
+
+- Workflow
+    - Create storage: A cluster i.e. an instance of Azure Data Explorer
+    - Create database: within cluster
+    - Ingest data: loading data into the database
+        - Setup automatic ingestion
+        - Data is never deleted or updated
+    - Query database
+..
+
+
+----
+### Batch Data Processing
+__
+
+- Google Cloud Data Fusion handles only Batch Processing
+
+..
+
+
+----
+### Cask, CDP, Cloud Data Fusion
+__
+
+- Curt Monash on Cask and CDAP 2015 [dbms2](http://www.dbms2.com/2015/03/05/cask-and-cdap/#more-9534)
+..
+
+
+----
+### On Maven
+__ Naming
+
+- Maven projects are named using Maven UIDs:
+    - groupID e.g. com.firexis.com
+    - artifactID e.g. someApp
+    - version e.g. 0.0.1-SNAPSHOT
+..
 __
 
 - What is Maven:
@@ -73,6 +245,17 @@ __
         - pitest-junit5-plugin for mutation modification tests
 ..
 
+
+---
+### On BigQuery
+__ Naming
+
+- BigQuery tables are named using:
+    - Project ID e.g. qwiklabs-123
+    - Dataset ID e.g. Marketing
+    - Table Name e.g. Campaign
+
+..
 
 ----
 ### Compare and contrast technologies
@@ -252,6 +435,7 @@ __ Roles and Responsibilities
     - Analyze, Explore a dataset
     - Ingest
     - Design Schema
+    - Physical Data Design
     - Design and Implement Batch Data Pipelines
     - Design and Implement Streaming Data Pipelines
     - Design and Implement Data Quality Transforms
@@ -292,6 +476,9 @@ __ Roles and Responsibilities
 ..
 __ Responsibilities and Tasks
 
+- Physical Data Design
+    - Partition
+    - Denormalization (1NF?)
 
 - Metadata management
     - Data lineage management
@@ -333,6 +520,11 @@ __ Responsibilities and Tasks
         - Uniform
             - SQL CAST()
             - SQL FORMAT() [web](https://cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#format_string)
+    - Common DQ Tasks:
+        - Cleanse
+        - Match
+        - De-dupe
+        - Standardize
 
 - Design and Implement Batch Data Pipelines
     - Roles: Data Engineer, Data Warehouse Engineer
@@ -1683,6 +1875,11 @@ __
 
 ----
 ### Data Engineer Learning Path
+
+__ Articles on online training
+
+- https://solutionsreview.com/data-management/the-best-data-warehousing-courses-and-online-training/
+..
 __
 
 - Link:
@@ -1756,6 +1953,14 @@ __ Microsoft Certifications
 
 - MCSE: Data Management and Analytics [skillport](https://acm.skillport.com/skillportfe/main.action?path=summary/BOOKS/157587#browse/fd1727c3-3cf1-4b18-9583-7ca5eb852f3b)
 
+- SSIS Design Patterns: https://www.pluralsight.com/courses/ssis-design-patterns-data-warehousing
+
+..
+
+__ AWS
+
+- Data Engineer nano degree
+    - https://www.udacity.com/course/data-engineer-nanodegree--nd027
 ..
 
 __ Databricks Training
@@ -1764,6 +1969,30 @@ __ Databricks Training
 __ Google
 
 - Google Data Engineer [skillport](https://acm.skillport.com/skillportfe/main.action?path=summary/BOOKS/157587#browse/7bcdd429-959d-4f02-baf8-78edb874b6b5)
+
+..
+
+__ Coursera
+
+- Design and Build a Data Warehouse for Business Intelligence Implementation
+    - https://www.coursera.org/learn/data-warehouse-bi-building
+- Relational Database Support for Data Warehouses
+    - https://www.coursera.org/learn/dwrelational
+- Design and Build a Data Warehouse for Business Intelligence Implementation
+    - https://www.coursera.org/learn/data-warehouse-bi-building
+- Data Warehouse Concepts, Design, and Data Integration
+    - https://www.coursera.org/learn/dwdesign
+- Data Warehousing for Business Intelligence Specialization
+    - https://www.coursera.org/specializations/data-warehousing
+..
+
+__ Teradata
+
+- Citizen Data Scientist
+    - https://www.teradata.com/University/Citizen-Data-Scientist
+
+- Teradata Certification
+    - https://www.teradata.com/University/Certification
 
 ..
 
