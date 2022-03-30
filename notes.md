@@ -1,18 +1,278 @@
 # Notes on Cloud Data Engineering
 
 ----
-### Good Blogs & Articles References
-- Wikipedia on Data Quality [web](https://en.wikipedia.org/wiki/Data_quality)
-- Liliendahl on Data Quality [web](https://liliendahl.com/data-quality-3-0)
-- Has a good list of references at the bottom [web](https://profisee.com/data-quality-what-why-how-who/)
-
-----
-### Credentials
+### Digital Badges
 __
 
 - List of credential earned:
     - <img src="img/notes-credentials.png" alt="" width="60%"/>
     - See: [Current Credentials](https://www.cloudskillsboost.google/public_profiles/70c3e8fe-77a0-45d9-a627-fa64f50ddafa)
+..
+
+
+----
+### On Managing Change
+__ Intro
+
+- The notion that everything that we are doing is some form or other of
+  managing and coping with change
+    - This section of the notes try to note the changes and point to
+      solutions
+..
+__ From Batch to Stream Processing
+
+- The truth is business have always wanted stream processing however the
+  computing technologies of the past have only been capable of batch
+  processing.
+
+..
+__ From Flat Workloads to Seasonal Workloads
+
+- Retailers, Movie industries have seasonal workloads
+- Food on the other hand has rather flat workload
+..
+
+
+----
+### Pub/Sub by Google
+__
+
+- Pub/Sub
+    - 100s of miliseconds latency
+    - API: C#, Go, Java, Node, Python, Ruby
+    - Save messages for 7 days
+    - HIPAA compliance
+    - Encrypted in-motion and at-rest
+    - At least once semantics
+    - Publisher: Pub/Sub Client that creates a Topic
+        - Multiple, decoupled Publishers to the same topic
+    - Subscriber: Pub/Sub Client that creates a Subscription (to a Topic)
+        - A Subscription is only to a single topic
+        - Muliple, decoupled Subscriptions to the same topic
+    - Pub/Sub is essentially a decoupled enterprise message bus at scale
+    - Pull subscriptions for manual pulls by any in a pool of workers
+        - This is an interesting pattern
+
+- Subscription
+    - Can setup Filters on message attributes
+
+- Patterns:
+    - Pass-through:
+        - 1 Publisher  -> 1 Topic -> 1 Subscription -> 1 Subscriber
+    - Fan-in:
+        - N Publishers -> 1 Topic -> 1 Subscription -> M Subscribers
+        - All Publisher messages goes to the same Subscription
+        - Each subscriber can filter on messages of interest
+    - Fan-out:
+        - 1 Publisher  -> 1 Topic -> 1 Subscription -> M Subscribers
+            - All subscribers get all messages from Publisher
+            - i.e. replicate publisher messages to all subscribers
+
+- Push vs Pull deliveries
+    - Pull Subscribers must send ACK after getting the Msg
+    - Push Subscribers assumed to send ACK on a HTTP 200 OK status
+        - Push Subscribers are web-hooks
+
+- Message Replays
+    - Allows Pub/Sub to send older messages to new subscribers
+
+- Subcriber Worker Pools
+    - Only one worker needs to send an ACK
+    - A good pattern for autoscaling workers
+
+- Messages
+    - Limit: 10 MB
+    - Can send binary data
+    - Message attributes are stored separately as metadata to facilliate
+      filtering to avoid deserializing
+
+- Publishing
+    - Send messages in batches
+    - Pub/Sub waits till batch is full
+    - Even with batch publishing, it is delivered one at a time to
+      subscribers
+
+- Subscribing
+    - Message ordering supported if in the same region
+    - Configured when creating a Subscription
+    - Prevents Denial-of-Service on the push subscriber
+
+- Subscription Delivery
+    - Data is held/buffered until application is ready
+    - Delivery failures should end-up in a Dead Letter Queue (DLQ)
+    - Exponential Backoff implemented for delivery failures for better
+      flow control
+    - Data may be delivered out-of-order (not a queue)
+    - Duplication will happen
+    - Dataflow will dedup messages and also handle late data to mitigate
+      out-of-order messages
+
+- Write-ups
+    - Differences between Google Pub/Sub and Apache Kafka, 2016
+      [web](https://www.jesse-anderson.com/2016/07/apache-kafka-and-google-cloud-pubsub/)
+
+..
+
+
+----
+### Dead Letter Queues (DLQ)
+__
+
+- A placeholder to DLQ
+    - https://developer.confluent.io/learn-kafka/kafka-connect/error-handling-and-dead-letter-queues/
+
+..
+
+
+----
+### Stream Processing
+__
+
+- Google Reference Architecture
+    - Ingestion: Pub/Sub
+    - Stream Processing:
+        - Dataflow
+            - (ELT|ETL: mostly aggregates & transforms)
+            - Also enrichment
+    - Storage: BigQuery, Cloud Bigtable
+    - Analytics & Visualization: BigQuery
+
+- Unbounded data
+    - Characteristics:
+        - Infinite dataset
+        - Time of data element matters
+        - Typically in-motion / held in temporaty storage
+    - Contrast with bounded data:
+        - Finite dataset
+        - Time element usually disregarded
+        - Typically at-rest / persisted in durable storage
+
+- Stream Processing Systems
+    - Low Latency
+    - Speculative results
+    - Controls for correctness
+..
+__ Use Cases
+
+- Online/Real-time decisions (100 ms - 10 s)
+    - Real-time recommendations
+    - Fraud detection
+    - Stock trading
+    - ML applications
+
+- Data Integration (10 sec - 10 min)
+    - Real-time Data Warehouse Dashboards
+    - ML applications:
+        - Sentiment analysis
+..
+__ Challenge: Volume
+
+- The challenge here is that the size of data has increased
+
+- Google proposes autoscaling as a solution here
+    - I think that's only if the data increase is seasonal or unpredictable
+    - Pub/Sub can autoscale to handle changing volumes of data
+
+..
+__ Challenge: Velocity
+
+- The challenge here is that time between each data element is shorter
+    - Or more data elements in the same time span
+    - Think of Black Friday or online sales days
+
+- Google proposes streaming processing here
+    - to handle variability of data arrivals
+    - Dataflow handles streaming data
+..
+__ Challenge: Variety
+
+- Voice data and images is one form of unstructured data
+
+- Google proposes using AI to handle unstructured data
+
+..
+__ Solution Architectures
+
+- Google Cloud Platform Solution
+    - <img src="img/stream-processing-gcp-solution.png" alt="" width="80%"/>
+..
+
+
+----
+### Change Data Capture
+__
+
+- Change data capture (CDC) provides historical change information for a
+  user table by capturing both the fact that Data Manipulation Language
+  (DML) changes (insert / update / delete) were made and the changed
+  data. Changes are captured in real time by using a capture process
+  that reads changes from the transaction log and places them in
+  corresponding change tables. These change tables provide a historical
+  view of the changes made over time to source tables. CDC functions
+  enable the change data to be consumed easily and systematically.
+    - From [microsoft](https://techcommunity.microsoft.com/t5/azure-sql-blog/stream-data-changes-from-a-cdc-enabled-azure-sql-database-to-an/ba-p/2570907)
+
+- Me: It's making the database transaction log accessible to other
+  processes.
+
+..
+
+----
+### Good Blogs & Articles
+__
+
+- Data Quality
+    - Wikipedia on Data Quality [web](https://en.wikipedia.org/wiki/Data_quality)
+    - Liliendahl on Data Quality [web](https://liliendahl.com/data-quality-3-0)
+    - Has a good list of references at the bottom [web](https://profisee.com/data-quality-what-why-how-who/)
+
+- Data Analytics
+    - In Government: https://gcn.com/data-analytics/
+..
+
+
+----
+### Kubernetes
+__
+
+- Kubernetes
+    - For deploying containerized applications
+    - Runs on a cluster composed of a master node and worker nodes
+
+- Kubernetes Deployment object
+    - An object for deploying stateless applications like web servers
+
+- Kubernetes Service object
+    - Defined rules and load balancing for accessing applications from
+      the internet
+    - No Service means no access from internet
+..
+
+
+----
+### Security Credentials
+__
+
+- How security credentials typically designed:
+    - First, there are credentials, usually made up of a username and
+      password
+    - Credentials represent an identity
+    - An identity may have one or more roles
+    - These roles have access permissions
+..
+
+
+----
+### Cloud Resources
+__
+
+- Naming
+    - Use the format `team-resource` e.g. an instance `jupiter-webserver1`
+
+- Compute sizes:
+    - f1-micro for small Linux VMS
+    - n1-standard-1 for Windows or other applications, such as Kubernetes nodes
+
 ..
 
 
@@ -36,6 +296,16 @@ __
         - This is named Pull cos periodically look into a folder then "Pull"
     - It could be event-driven (Push): e.g. triggered by new file in a folder
         - This is Push because file if Pushed to folder and that triggers
+
+- Articles to research:
+    - https://www.leapfrogbi.com/etl-design-patterns-the-foundation/
+    - https://www.timmitchell.net/etl-best-practices/
+    - https://aws.amazon.com/blogs/big-data/etl-and-elt-design-patterns-for-lake-house-architecture-using-amazon-redshift-part-1/
+    - https://docs.microsoft.com/en-us/azure/architecture/data-guide/relational-data/etl
+    - https://www.codeproject.com/Articles/5324207/Making-a-Simple-Data-Pipeline-Part-1-The-ETL-Patte
+    - https://davewentzel.com/content/performant-etl-and-ssis-patterns/
+
+
 ..
 
 
@@ -58,6 +328,23 @@ __
 __
 
 The function is written in Javascript. Mostly boilerplate code.
+
+..
+
+
+----
+### GCP Billing
+__
+
+- Google Cloud Platform Billing is done by projects:
+    - A Google Cloud project is an organizing entity for your Google
+      Cloud resources. It often contains resources and services; for
+      example, it may hold a pool of virtual machines, a set of
+      databases, and a network that connects them together. Projects
+      also contain settings and permissions, which specify security
+      rules and who has access to what resources.
+      [web](https://cloud.google.com/docs/overview/#projects)
+
 
 ..
 
@@ -439,6 +726,7 @@ __ Roles and Responsibilities
     - Design and Implement Batch Data Pipelines
     - Design and Implement Streaming Data Pipelines
     - Design and Implement Data Quality Transforms
+    - Design and Implement Data Enrichment Transforms
     - Monitoring: Capacity, Performance
     - Modify: ML team wants more data
     - Data access and governance
