@@ -2,6 +2,20 @@
 <small>A chronological log of the things I'm doing to get to my goal of becoming a Cloud Data Engineer.</small>
 
 ----
+**Wed, 30 Mar 2022**
+__
+
+- Completed the quest [Create and Manage Cloud Resources](https://www.cloudskillsboost.google/quests/120)
+    - <img src="img/notes-quest-create-and-manage-cloud-resources.png" alt="" width="30%"/>
+    - It has a nice Challenge Lab to spin up Kubernetes clusters, and
+      create load balancers which are typical cloud tasks.
+
+- Started course [Building Resilient Streaming Analytics Systems on Google Cloud](https://www.cloudskillsboost.google/course_templates/52)
+    - This is the third course in the Data Engineering on Google Cloud
+      course series
+..
+
+----
 **Tue, 29 Mar 2022**
 __
 
