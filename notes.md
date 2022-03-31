@@ -11,6 +11,19 @@ __
 
 
 ----
+### Experimenting with Big Data
+__
+
+- To generate streaming data, one way is to simulate it. [github](https://github.com/GoogleCloudPlatform/training-data-analyst/courses/streaming/publish/send_sensor_data.py)
+    - The notion of speedup factor in the code is interesting
+
+- Sources of public datasets:
+    - UCI ML Repository
+        - Online Retail Data Set [uci](https://archive.ics.uci.edu/ml/datasets/online+retail)
+..
+
+
+----
 ### On Managing Change
 __ Intro
 
@@ -34,7 +47,7 @@ __ From Flat Workloads to Seasonal Workloads
 
 
 ----
-### Pub/Sub by Google
+### Google Pub/Sub
 __
 
 - Pub/Sub
@@ -196,6 +209,93 @@ __ Solution Architectures
 - Google Cloud Platform Solution
     - <img src="img/stream-processing-gcp-solution.png" alt="" width="80%"/>
 ..
+__ Challenge: Late arriving data
+
+- The challenge here is that data could arrive out of order
+    - Google Pub/Sub does not guarantee ordering across regions
+..
+__ Windows in Stream Processing
+
+- Motivation:
+    - Aggregation functions typically occurs over a finite window
+    - Streams are unbounded
+    - Streams are divided into a series of finite windows
+        - Think modulus, or the second hand of the clod
+        - Making the infinite, finite
+
+- Terms & Abbreviations:
+    - DTS: Datetime Stamp
+
+..
+
+
+----
+### Google Dataflow
+__
+
+- Dataflow for stream processing
+    - Dedups by:
+        - Maintaining a list of unique ids seen in the last 10 minutes
+    - Supports streaming windows by:
+        - Automatically windowing on date-time-stamp (DTS)
+        - If there is a significant delay between the timestamp of an
+          event and the time the message is actually received, able to
+          use a PTransform to update the DTS in the message's metadata
+          (which is used for windowing) to use the original event
+          timestamp
+
+..
+__ Types of Windows
+
+- 
+
+..
+__ Watermarks
+
+- The watermark
+- A nice talk on streaming processing, watermarks, 2016 [youtube](https://www.youtube.com/watch?v=TWxSLmkWPm4)
+    - Motivates the need for stream processing and windows
+    - Introduces the notion of low watermarks
+    - Benefits of watermarks:
+        - Visibility: Knows how much backlog there is
+        - Actionability: Once passed the watermark, window is bounded,
+          aggregates flushed
+    - Formalizes notion of watermarks in a DAG pipeline
+    - Inferring Source (PubSub) watermarks from metadata
+    - Notion of data watermarks vs system watermarks
+    - System watermarks to distinguish between data and system delays
+    - Source matermarks are critical
+..
+__ Custom triggers
+
+- Dataflow triggers window flush in several ways
+    - AfterWatermark (Default)
+        - Trigger after watermark
+    - AfterProcessing
+        - Trigger after processing for some time duration
+    - AfterCount
+        - Trigger after processing N elements
+
+- Can be combined e.g.
+    - While batching, trigger several releases using `AfterProcessing`
+    - Then on watermark, trigger using `AfterWatermark`
+    - And finally, trigger using `AfterCount` for late arriving elements
+..
+
+
+----
+### Dimensions of a Solution
+__
+
+- Scalability
+    - How does the solution handle larger input volumes
+
+- Fault Tolerance
+    - How does the solution handle component failures
+
+- Latency
+    - How long does it take the solution to convert input into output
+..
 
 
 ----
@@ -218,8 +318,13 @@ __
 ..
 
 ----
-### Good Blogs & Articles
+### Good Blogs & Articles & Videos
 __
+
+- Stream Processing
+    - A nice talk on streaming processing, watermarks, 2016 [youtube](https://www.youtube.com/watch?v=TWxSLmkWPm4)
+    - Another talk on Apache Beam, 2016 [youtube](https://www.youtube.com/watch?v=E1k0B9LN46M)
+    - Tyler Akidau on Data Processing at Google, 2016 [youtube](https://www.youtube.com/watch?v=9J_cWustI-A)
 
 - Data Quality
     - Wikipedia on Data Quality [web](https://en.wikipedia.org/wiki/Data_quality)
@@ -228,6 +333,10 @@ __
 
 - Data Analytics
     - In Government: https://gcn.com/data-analytics/
+
+- Reinforcement Learning
+    - Google just gave control over data center cooling to an AI, 2018 [mit](https://www.technologyreview.com/2018/08/17/140987/google-just-gave-control-over-data-center-cooling-to-an-ai/)
+    - Grandmaster level in StarCraft II using multi-agent reinforcement learning, 2019 [paper](https://storage.googleapis.com/deepmind-media/research/alphastar/AlphaStar_unformatted.pdf)
 ..
 
 
@@ -2281,6 +2390,13 @@ __ Teradata
 
 - Teradata Certification
     - https://www.teradata.com/University/Certification
+
+..
+
+__ Python
+
+- Faust: Getting Started with Stream Processing
+    - https://acm.skillport.com/skillportfe/main.action#summary/COURSES/CDE$110302:_ss_cca:it_pyspwfdj_01_enus
 
 ..
 
