@@ -1,6 +1,25 @@
 # Work Log
 <small>A chronological log of the things I'm doing to get to my goal of becoming a Cloud Data Engineer.</small>
 
+
+----
+**Thu, 31 Mar 2022**
+__
+
+- Continued course [Building Resilient Streaming Analytics Systems on Google Cloud](https://www.cloudskillsboost.google/course_templates/52)
+    - Streaming processing is very interesting in it's own right
+    - Notions of Windowing, Watermarks and Late Messages
+    - Have not completed this course because got side-tracked by ChaiyoGCP!
+- Taking part in ChaiyoGCP!.[web](https://events.withgoogle.com/chaiyogcp-challenge/home-english/#content)
+    - Decided to focus on Data Engineering related Quests
+- Completed a quest [Baseline: Data, ML, AI](https://www.cloudskillsboost.google/quests/34) as part of ChaiyoGCP!:
+    - <img src="img/notes-completion-baseline-data-ml-ai.png" alt="" width="30%"/>
+    - Did many labs today as part of the quest including DataPrep and
+      Reinforcement Learning labs
+    - The Vertex AI and Reinforcement Learning labs were quite over my
+      head but I plan to revisit them when I have the chance
+..
+
 ----
 **Wed, 30 Mar 2022**
 __
