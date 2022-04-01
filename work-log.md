@@ -3,6 +3,20 @@
 
 
 ----
+**Fri, 01 Apr 2022**
+__
+
+- Continued questing in ChaiyoGCP!. [web](https://events.withgoogle.com/chaiyogcp-challenge/home-english/#content)
+    - Completed a quest: Perform Foundational Data, ML, and AI Tasks in Google Cloud
+        - <img src="img/notes-quest-perform-foundational-data-ml-al-tasks.png" alt="" width="30%"/>
+    - Completed a quest: BigQuery Basics for Data Analysts
+        - <img src="img/notes-quest-bigquery-basics-for-data-analysts.png" alt="" width="30%"/>
+    - Completed a quest: Insights from Data with BigQuery
+        - <img src="img/notes-insights-from-data-with-bigquery.png" alt="" width="30%"/>
+    - See the latest badge profile [here](https://www.cloudskillsboost.google/public_profiles/70c3e8fe-77a0-45d9-a627-fa64f50ddafa)
+..
+
+----
 **Thu, 31 Mar 2022**
 __
 
