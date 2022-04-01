@@ -11,7 +11,17 @@ __
 
 
 ----
-### Experimenting with Big Data
+### Google Apps Script
+__
+
+- Server-side JS similar to Node.js, focused on tight integration with
+  Workspace and other Google services
+- To automate work across Google products and third party services
+..
+
+
+----
+### Experimenting with Big Datasets
 __
 
 - To generate streaming data, one way is to simulate it. [github](https://github.com/GoogleCloudPlatform/training-data-analyst/courses/streaming/publish/send_sensor_data.py)
@@ -20,6 +30,9 @@ __
 - Sources of public datasets:
     - UCI ML Repository
         - Online Retail Data Set [uci](https://archive.ics.uci.edu/ml/datasets/online+retail)
+
+- GCP:
+    - data-to-insights ecommerce dataset [gcp](https://console.cloud.google.com/bigquery?project=data-to-insights&page=ecommerce)
 ..
 
 
@@ -643,14 +656,19 @@ __
 
 
 ---
-### On BigQuery
+### Google BigQuery
 __ Naming
 
 - BigQuery tables are named using:
     - Project ID e.g. qwiklabs-123
     - Dataset ID e.g. Marketing
     - Table Name e.g. Campaign
+..
+__ Links
 
+- bq CLI [gcp](https://cloud.google.com/bigquery/docs/reference/bq-cli-reference)
+- Standard SQL [gcp](https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax)
+- Interactive SQL translator for Teradata SQL [gcp](https://cloud.google.com/bigquery/docs/interactive-sql-translator)
 ..
 
 ----
