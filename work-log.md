@@ -1,6 +1,24 @@
 # Work Log
 <small>A chronological log of the things I'm doing to get to my goal of becoming a Cloud Data Engineer.</small>
 
+----
+**Sat, 02 Apr 2022**
+__
+
+- Continued questing in ChaiyoGCP!. [web](https://events.withgoogle.com/chaiyogcp-challenge/home-english/#content)
+    - Did more Infrastructure and DevOps type of labs today:
+        - Introduction to Docker
+        - Hello Node Kubernetes
+        - Cloud Source Repositories: Qwik Start
+        - Google Cloud SDK: Qwik Start - Redhat/Centos
+        - App Engine: qwik Start - Python
+        - Container-Optimized OS: Qwik Start
+        - DataStore: Qwik Start
+        - Cloud SQL for PostgreSQL: Qwik Start
+        - Data Loss Prevention:Qwik Start - Command Line
+        - Cloud Functions: Qwik Start - Command Line
+    - Didn't finish any Quests but getting there :)
+..
 
 ----
 **Fri, 01 Apr 2022**
