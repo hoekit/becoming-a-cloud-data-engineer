@@ -1,6 +1,25 @@
 # Work Log
 <small>A chronological log of the things I'm doing to get to my goal of becoming a Cloud Data Engineer.</small>
 
+
+----
+**Sun, 03 Apr 2022**
+__
+
+- Continued questing in ChaiyoGCP!. [web](https://events.withgoogle.com/chaiyogcp-challenge/home-english/#content)
+    - Did the following labs:
+        - Cloud Security Scanner: Qwik Start
+        - Google Assistant: Qwik Start - Dialogflow
+        - Cloud Endpoints: Qwik Start
+        - Orchestrating the Cloud with Kubernetes
+        - Managing Deployments Using Kubernetes Engine
+        - Creating a Data Transformation Pipeline with Cloud Dataprep
+        - ETL Processing on Google Cloud Using Dataflow and BigQuery
+        - Using BigQuery in the Google Cloud Console
+        - Data Catalog: Qwik Start
+..
+
+
 ----
 **Sat, 02 Apr 2022**
 __
