@@ -11,6 +11,133 @@ __
 
 
 ----
+### Data Catalog
+__
+
+- Automatic metadata update
+- Search with ACL
+- Structured tags
+
+- Introduction to Data Catalog, 2020
+    - https://www.youtube.com/watch?v=eUKqXZDXj78
+    - Includes how BlackRock is using Data Catalog
+..
+
+
+----
+### Readiness Probe
+__ What is it
+
+- A readiness probe is a way for Kubernetes to ask your app if if it
+  should send traffic to it
+
+- It's where the application and infrastructure meet
+
+- Typically implemented as an endpoint at tcp:81
+
+- See: https://youtu.be/IDoRWieTcMc?t=1527
+..
+
+
+
+----
+### Jenkins
+__
+
+
+
+..
+__ Resources
+
+- Continuous Delivery Best Practices with Jenkins and GKE, 2018
+    - https://www.youtube.com/watch?v=IDoRWieTcMc
+
+..
+
+
+----
+### Helm
+__ What is it
+
+- Helm is:
+    - a package manager for Kubernetes
+    - packages are called `charts`
+    - Helm has a Jenkins Helm chart
+
+..
+
+
+----
+### Heterogenous Deployments
+__
+
+- Common scenarios:
+    - Multi-cloud deployments
+    - Fronting on-premises data
+    - CI/CD processes
+
+- Nice lab on managing canary, blue-green deployments on GKE
+    - https://www.cloudskillsboost.google/focuses/639?parent=catalog
+    - Canary Deployments and rollbacks are made easy
+    - Blue-Green Deployments and rollbacks are made easy
+..
+
+----
+### Google Cloud Endpoints
+__
+
+- What is it?
+    - A set of tools to generate APIs from within an App Engine application
+
+- The steps:
+    - git clone https://github.com/GoogleCloudPlatform/endpoints-quickstart.git
+    - Create an OpenAPI configuration file
+        - See example: openapi.yaml
+    - Deploy the API:
+        - See example: cd scripts && ./deploy_api.sh
+
+    - Create the app
+        - See example: app/airports.py
+    - Deploy the app:
+        - See example: cd scripts && ./deploy_app.sh
+
+    - See also other scripts in the `scripts` directory
+
+- If Google Cloud Endpoints is used with App Engine
+    - Updating the endpoints will also need to redeploy the app
+
+- The nice thing is that Google Cloud Endpoints provides rate-limiting
+..
+
+
+----
+### Google Actions
+__
+
+- Actions on Google Developer Console
+    - http://console.actions.google.com/
+
+- Actions Glossary
+    - https://developers.google.com/actions/glossary
+
+- Glossary:
+    - `Action`: an interaction built for Google Assistant that performs
+      specific tasks based on user input.
+    - `Intent`: the goal of the Action (e.g. generate quotes). An intent
+      takes user input and channels it to trigger an event.
+    - `Agent (Dialogflow)`: a module that uses NLU and ML to transform
+      user input into actionable data to be used by an Assistant
+      application.
+
+- So basically the flow is this:
+    - Google Assistant receives some input e.g. user speech or some text
+    - That's passed on to DialogFlow parses it and matches it to an intent
+        - It then triggers an intent
+        - An intent is like an endpoint within an Android app
+..
+
+
+----
 ### Google Cloud Functions
 __
 
@@ -50,8 +177,31 @@ __ Kubernetes pods
 - A Kubernetes pod is:
     - a group of containers tied together
     - with shared storage and network resources
+        - shared namespace
+        - One IP per pod
     - to simplify admin and networking
+    - also have volumes
 
+- A Pod Volume is
+    - a set of data disks that live as long as the pods live
+    - can be used by containers in that pod
+    - shared by containers in the pod
+..
+__ Kubernetes Services
+
+- A Kubernetes service:
+    - provides stable endpoints for pods
+        - Pods can be restarted anytime, resulting in changed IP
+    - uses labels to determine what Pods to operate on
+        - if they have the corect labels, they are exposed
+
+- Types of Service:
+    - ClusterIP (default):
+        - means service only visible inside K8s cluster
+    - LoadBalancer:
+        - adds a load balancer, forwards traffic from service to nodes
+    - NodePort:
+        - Each node gets an externally accessible IP
 ..
 __ Kubernetes Cluster Info
 
@@ -62,7 +212,6 @@ __ Kubernetes Cluster Info
 - View events and logs
     - `kubectl get events`
     - `kubectl logs POD_NAME`
-
 ..
 __ Exposing Kubernetes pods
 
@@ -96,6 +245,22 @@ __ Update Deployments
         - `kubectl edit deployment $DEPLOYMENT`
             - Update Spec > containers > image
 ..
+__ kubectl
+
+- kubectl explain deployment
+- kubectl explain deployment --recursive
+- kubectl explain deployment.metadata.name
+
+- Get External IP of a service named `frontend`:
+    - `kubectl get svc frontend -o=jsonpath="{.status.loadBalancer.ingress[0].ip}"`
+
+- Scale a deployment named `hello`
+    - `kubectl scale deployment hello --replicas=5`
+
+- Get pod versions
+    - `kubectl get pods -o jsonpath --template='{range .items[*]}{.metadata.name}{"\t"}{"\t"}{.spec.containers[0].image}{"\n"}{end}'`
+
+..
 __ References:
 
 - kubectl commands
@@ -112,6 +277,9 @@ __ References:
 
 - Kubernetes Blog
     - http://blog.kubernetes.io/
+
+- Video on difference between K8s Deployments and Pods
+    - https://www.youtube.com/watch?v=t-y3PpuBadA
 ..
 
 
@@ -1133,6 +1301,16 @@ __
 
 ----
 ### Roles, Responsiblities, Tasks
+__ Types of Roles
+
+- Taking all the different labs highlights a kind of separation:
+    - Data Engineers
+        - Tools: BigQuery, Data Ingestion, Output
+    - Developers
+        - Develop apps, website tools, etc
+    - Infrastructure
+        - Tools: Kubernetes, Jenkins
+..
 __ Roles and Responsibilities
 
 - Role: Data Engineer
