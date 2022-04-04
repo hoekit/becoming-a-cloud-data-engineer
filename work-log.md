@@ -3,6 +3,24 @@
 
 
 ----
+**Mon, 04 Apr 2022**
+__
+
+- Continued questing in ChaiyoGCP!. [web](https://events.withgoogle.com/chaiyogcp-challenge/home-english/#content)
+    - Completed a rather challenging Quest:
+        - [Engineer Data in Google Cloud](https://www.cloudskillsboost.google/quests/132)
+        - <img src="img/notes-quest-engineer-data-in-google-cloud.png" alt="" width="30%"/>
+    - And a host of other labs:
+        - Exploring Dataset Metadata Between Projects with Data Catalog
+        - Build and Execute MySQL, PostgreSQL, and SQLServer to Data
+          Catalog Connectors
+        - Internet of Things: Qwik Start
+        - Building an IoT Analytics Pipeline on Google Cloud
+        - Predict Visitor Purchases with a Classification Model in BQML
+        - Cloud Composer: Copying BigQuery Tables Across Different Locations
+..
+
+----
 **Sun, 03 Apr 2022**
 __
 
