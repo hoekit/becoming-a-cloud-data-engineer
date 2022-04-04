@@ -11,16 +11,415 @@ __
 
 
 ----
+### Terraform
+__ What is it:
+
+- Terraform is:
+    - a tool for provisioning infrastructure
+    - open-source
+    - more importantly: declarative
+    - automatic changes to infrastructure is easy
+    - replicating infrastructure is easy e.g. staging, dev
+..
+__ Compared to Ansible
+
+- Both
+    - Infrastructure as code
+
+- Differences
+    - Ansible:
+        - Mainly a configuration tool
+        - more mature
+    - Teraform:
+        - Mainly infrastructure tool
+        - relatively new
+        - more advanced in orchestration
+..
+__ Terraform Architecture
+
+- Terraform Core
+    - Terraform configuration TF-Config i.e. the target state
+    - Core creates plan: a function of config and state
+        - Plan of what needs to do and the sequence
+        - Execute plan with Providers
+
+- Terraform State
+    - Is the Current state of the infrastructure
+
+- Providers
+    - Connectors to providers:
+        - IaaS: AWS | Azure
+        - PaaS: Kubernetes
+        - SaaS: Fastly
+..
+__ Terraform commands
+
+- refresh
+    - query infrastructure provider to get current State
+
+- plan
+    - create an execution plan
+
+- apply
+    - execute the plan
+
+- destry
+    - destroy the resources/infrastructure
+..
+
+
+----
+### Engineer Data in Google Cloud: Challenge Lab
+__ Lab:
+
+- Lab: https://www.cloudskillsboost.google/focuses/12379?parent=catalog
+- Dataset: taxirides
+- Source Table: historical_taxi_rides_raw
+- Target Table: taxi_training_data_499
+..
+__ Task 1: Clean your training data
+
+- Clean the data:
+    ```
+    #standardSQL
+    SELECT
+        Fare_amount                                 -- FIXME
+        FIXME
+    - WHERE
+        - trip_distance > Number                    -- FIXME
+        - fare_amount >= Value                      -- FIXME
+        - latitude  is reasonable                   -- FIXME NOT NULL??
+            - Need to look at the values
+        - longitude is reasonable                   -- FIXME NOT NULL??
+            - Need to look at the values
+        - passenger_count > Number                  -- FIXME
+        - sampling 1 million rows from > 1Billion   -- FIXME
+
+    ```
+
+- Look at latitude longitude distribution:
+
+    SELECT
+      COUNTIF(pickup_latitude IS NULL) AS null_pickup_latitude,
+      COUNT(pickup_latitude) AS num_pickup_latitude,
+      MIN(pickup_latitude) AS low_pickup_latitude,
+      MAX(pickup_latitude) AS high_pickup_latitude,
+      AVG(pickup_latitude) AS avg_pickup_latitude,
+      STDDEV(pickup_latitude) AS stddev
+    FROM `qwiklabs-gcp-04-2230a17d031d.taxirides.historical_taxi_rides_raw`
+
+    SELECT
+      COUNTIF(dropoff_latitude IS NULL) AS null_dropoff_latitude,
+      COUNT(dropoff_latitude) AS num_dropoff_latitude,
+      MIN(dropoff_latitude) AS low_dropoff_latitude,
+      MAX(dropoff_latitude) AS high_dropoff_latitude,
+      AVG(dropoff_latitude) AS avg_dropoff_latitude,
+      STDDEV(dropoff_latitude) AS stddev
+    FROM `qwiklabs-gcp-04-2230a17d031d.taxirides.historical_taxi_rides_raw`
+
+    SELECT
+      COUNTIF(pickup_longitude IS NULL) AS null_pickup_longitude,
+      COUNT(pickup_longitude) AS num_pickup_longitude,
+      MIN(pickup_longitude) AS low_pickup_longitude,
+      MAX(pickup_longitude) AS high_pickup_longitude,
+      AVG(pickup_longitude) AS avg_pickup_longitude,
+      STDDEV(pickup_longitude) AS stddev
+    FROM `qwiklabs-gcp-04-2230a17d031d.taxirides.historical_taxi_rides_raw`
+
+    SELECT
+      COUNTIF(dropoff_longitude IS NULL) AS null_dropoff_longitude,
+      COUNT(dropoff_longitude) AS num_dropoff_longitude,
+      MIN(dropoff_longitude) AS low_dropoff_longitude,
+      MAX(dropoff_longitude) AS high_dropoff_longitude,
+      AVG(dropoff_longitude) AS avg_dropoff_longitude,
+      STDDEV(dropoff_longitude) AS stddev
+    FROM `qwiklabs-gcp-04-2230a17d031d.taxirides.historical_taxi_rides_raw`
+
+    SELECT
+      COUNTIF(longitude IS NULL) AS null_longitude,
+      COUNT(longitude) AS num_longitude,
+      MIN(longitude) AS low_longitude,
+      MAX(longitude) AS high_longitude,
+      AVG(longitude) AS avg_longitude,
+      STDDEV(longitude) AS stddev
+    FROM `nyc-tlc.yellow.trips`
+
+    SELECT
+        # Technique to sample 1 out of 1000 rows
+        MOD(ABS(FARM_FINGERPRINT(CAST(pickup_datetime AS STRING))),1000) = 1
+
+See https://cloud.google.com/bigquery/docs/writing-results
+    - On saving query results to tables
+
+..
+__ Task 2: Create a BQML model
+
+- First create/train a model
+- Then run ML.EVALUATE() on the model
+- Need to do feature engineering by enriching the data with euclidean distance
+..
+__   Task 2.1: Create the model with TRANSFORM clause
+
+See: https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-syntax-create#transform
+    - All preprocessing in TRANSFORM clause is automatically applied
+      during prediction and evaluation!
+
+CREATE OR REPLACE MODEL m
+TRANSFORM (
+    * EXCEPT(...),                                  -- FIXME
+    ST_Distance(
+      ST_GeogPoint(pickuplon, pickuplat),           -- FIXME
+      ST_GeogPoint(dropofflon, dropofflat)          -- FIXME
+    ) AS euclidean,
+    label_col                                       -- FIXME
+)
+OPTIONS (
+    model_type=’linear_reg’,
+    input_label_cols=['label_col'])                 -- FIXME
+)
+AS SELECT * FROM t              -- Use the same columns in evaluate and predict
+..
+__   Task 2.2 Evaluate the model
+
+See: https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-syntax-evaluate
+
+#standardSQL
+SELECT
+  SQRT(mean_squared_error) AS rmse
+FROM
+  ML.EVALUATE(MODEL m, TABLE t)
+
+- To get RMSE below 10, try:
+    - feature engineering to put in more relevant features
+    - change the sampling
+..
+__ Task 3: Perform batch prediction
+
+See: https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-syntax-predict
+
+- Source table: report_prediction_data
+- Target table: 2015_fare_amount_predictions
+
+#standardSQL
+SELECT
+  *
+FROM
+  ML.PREDICT(MODEL m, TABLE t)
+
+..
+__ Resource:
+
+- The TRANSFORM Clause
+    - https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-syntax-create#transform
+
+- The ML.EVALUATE Function
+    - https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-syntax-evaluate
+
+- The ML.PREDICT function
+    - https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-syntax-predict
+
+- Standard SQL Functions and Operators
+    - https://cloud.google.com/bigquery/docs/reference/standard-sql/functions-and-operators
+
+- Writing BigQuery output to tables
+    - https://cloud.google.com/bigquery/docs/writing-results
+    - Easier to use the UI
+
+: https://www.cloudskillsboost.google/focuses/1797?parent=catalog
+..
+
+
+----
+### Google Cloud IoT Core
+__ What is it
+
+- Cloud IoT Core is:
+    - fully managed services
+    - securely connect devices via MQTT protocol
+        - MQTT: Message Queue Telemetry Transport
+    - ingest data from devices
+    - manage devices
+
+- Cloud IoT Core works with:
+    - Cloud PubSub: by sending data to PubSub
+..
+__ Concepts:
+
+- Device:
+    - a processing unit
+    - capable of connecting to the internet and send data
+    - send two types of data: telemetry and state
+
+- Telemetry:
+    - event data monitored by the device
+        - e.g. measurements about the environment
+    - `device telemetry event`: refers to telemetry data sent from
+      device to cloud
+
+- Device state
+    - an arbitrary, user-defined blob of data
+    - describes the current status of the device
+    - can be structured or unstructured
+    - flows only in the device-to-cloud direction
+
+- Device configuration
+    - an arbitrary, user-defined blob of data
+    - used to control or change a device's state
+    - can be structured or unstructured
+    - flows only in the cloud-to-device direction
+
+- Device registry
+    - A container of devices with shared properties
+    - devices are `registered` to a device service like Cloud IoT Core
+
+Device Manager
+    - The service used to:
+        - monitor device health and activity
+        - update device configurations
+        - manage credentials and authentication
+
+MQTT:
+    - an industry-standard IoT protocol
+    - a publish/subscrib messaging protocol
+
+..
+__ Cloud IoT Components
+
+- Main components:
+    - one device manager
+        - to register, monitor and configure devices
+    - two protocol bridges (MQTT and HTTP)
+        - for devices to connect to Google Cloud
+..
+__ Reference Architecture
+
+- Device telemetry data sent to Cloud IoT Core
+- Events sent to Cloud Pub/Sub
+
+..
+
+__ Lab: https://www.cloudskillsboost.google/focuses/1771?parent=catalog
+..
+__ Cloud IoT Core to PubSub
+
+- A PubSub topic must be created first
+- Then create an IoT Core registry
+
+..
+__ Device to Cloud IoT Core
+
+- An IoT Core registry must be created first
+
+- A Device must also be registered
+
+- An RS256 public key must be created:
+    ```
+        openssl req -x509 -newkey rsa:2048 -keyout rsa_private.pem -nodes \
+            -out rsa_cert.pem -subj "/CN=unused"
+    ```
+- The public key in rsa_cert.pem must be added as a public key in the
+  device created
+    - Input method: Enter manually
+    - Public key format: RS256_X509
+
+- Install Google Cloud root cert
+    - `curl -O https://pki.goog/roots.pem`
+
+- A NodeJS sample to simulate a device:
+    - git clone https://github.com/googleapis/nodejs-iot
+    - Needs the private key generated above to work
+
+- Generate events from simulator
+    ```
+    node cloudiot_mqtt_example_nodejs.js \
+        mqttDeviceDemo \
+        --projectId=$PROJECT_ID \
+        --cloudRegion=us-central1 \
+        --registryId=my-registry \
+        --deviceId=my-device \
+        --privateKeyFile=rsa_private.pem \
+        --numMessages=25 \
+        --algorithm=RS256 \
+        --serverCertFile=roots.pem \
+        --mqttBridgePort=443
+    ```
+..
+
+__ References:
+
+- Easily Build an IoT Analytics Pipeline
+    - https://youtu.be/r_4BVf2x2Yo
+
+- Quest: IoT in the Google Cloud
+    - https://google.qwiklabs.com/quests/49
+
+- Read: Getting Started guide for Cloud IoT Core
+    - https://cloud.google.com/iot/docs/how-tos/getting-started
+
+- Read Overview of Internet of Things
+    - https://cloud.google.com/solutions/iot-overview
+..
+
+
+----
+### gcloud service accounts
+__
+
+- Export env variables
+    ```
+        export PROJECT_ID=$(gcloud config get-value project)
+    ```
+
+- Create service account e.g. SQL Server to Data Catalog Connector
+    ```
+        gcloud iam service-accounts create sqlserver2dc-credentials \
+          --display-name  "Service Account for SQLServer to Data Catalog connector" \
+          --project $PROJECT_ID
+    ```
+
+- Create and Download Service Account Key:
+    ```
+        gcloud iam service-accounts keys create "sqlserver2dc-credentials.json" \
+          --iam-account "sqlserver2dc-credentials@$PROJECT_ID.iam.gserviceaccount.com"
+    ```
+
+- Add Data Catalog admin role to Service Account:
+    ```
+        gcloud projects add-iam-policy-binding $PROJECT_ID \
+          --member "serviceAccount:sqlserver2dc-credentials@$PROJECT_ID.iam.gserviceaccount.com" \
+          --quiet \
+          --project $PROJECT_ID \
+          --role "roles/datacatalog.admin"
+    ```
+
+..
+
+
+----
 ### Data Catalog
 __
 
 - Automatic metadata update
 - Search with ACL
 - Structured tags
+..
+__ References
+
+- GitHub repo for SQLServer to Data Catalog connector
+    - https://github.com/GoogleCloudPlatform/datacatalog-connectors-rdbms/tree/master/google-datacatalog-sqlserver-connector
 
 - Introduction to Data Catalog, 2020
     - https://www.youtube.com/watch?v=eUKqXZDXj78
     - Includes how BlackRock is using Data Catalog
+
+- Data Catalog roles
+    - https://cloud.google.com/data-catalog/docs/concepts/iam#attaching_tags_to_resources
+
+- IAM roles for Data Catalog
+    - https://cloud.google.com/iam/docs/understanding-roles#datacatalog
+
+- Data Catalog docs
+    - https://cloud.google.com/data-catalog/docs/concepts/introduction-data-catalog
 ..
 
 
@@ -37,7 +436,6 @@ __ What is it
 
 - See: https://youtu.be/IDoRWieTcMc?t=1527
 ..
-
 
 
 ----
@@ -263,6 +661,9 @@ __ kubectl
 ..
 __ References:
 
+- Kubernetes for Sysadmins
+    - https://www.youtube.com/watch?v=HlAXp0-M6SY
+
 - kubectl commands
     - https://cloud.google.com/container-engine/docs/kubectl/
 
@@ -282,6 +683,27 @@ __ References:
     - https://www.youtube.com/watch?v=t-y3PpuBadA
 ..
 
+__ Notes from Kubernetes for Sysadmins, 2016
+
+- https://www.youtube.com/watch?v=HlAXp0-M6SY
+
+- Kubernetes is declarative
+    - A contract between developer and sysadmin
+    - Kubernetes expects a container
+        - Like Fedex expects a Fedex box
+
+- Think of containers in two parts
+    - Building the container
+    - Running the container
+
+- Configuration for apps:
+    - Handled by Secrets and ConfigMaps
+        - kubectl create secret generic ngins --from-file nginx.conf
+
+- The problem with containers @20:10
+    - Most people are not used to explicitly listing the filepaths that
+      the app need
+..
 
 ----
 ### Docker
@@ -467,6 +889,15 @@ __ References:
 
 - Specifying zones and buckets for GCR:
     - https://cloud.google.com/container-registry/docs/#pushing_to_the_registry
+..
+
+__ Best Practices
+
+- Use small containers
+    - Default node image: 670MB
+    - node-alpine image: 65MB (10 times smaller)
+    - https://www.youtube.com/watch?v=wGz_cbtCiEA
+
 ..
 
 ----
@@ -979,6 +1410,31 @@ __
 - Support triggers via POST requests
 
 - Auto retry N times supported
+..
+__ Resources
+
+- Newcomer's Guide to Airflow's Architecture, 2021
+    - https://www.youtube.com/watch?v=oLTMN-4Rvj8
+    - Airflow does scheduling of DAGs
+    - Airflow runs TaskInstances and records the results
+    - DAGs is like a template, when it runs, it's a DagRun
+    - An Operator is a Task Template
+    - A Task is a parameterized operator in a DAG
+    - A TaskInstance is a Task running in a DagRun
+
+- References:
+    - Airflow concepts: https://airflow.apache.org/concepts.html#
+
+- Cloud Composer: Good development practices, 2020
+    - https://www.youtube.com/watch?v=RrKXZcKOz4A
+    - Full compatibility with Apache Airflow
+    - Practices
+        - Have tasks retry
+        - Tasks should be idempotent else retry may not work
+        - All work should be in Tasks
+        - Use existing operators first
+        - Modules: Use PyPi and Composer allows specifying packages
+        - Use DAG Run Operator to compose Tasks instead of SubDags
 ..
 
 
@@ -1685,7 +2141,7 @@ __
 
 ----
 ### Lab: [Predicting Visitor Purchases with a Classification Model with BigQuery ML](https://www.cloudskillsboost.google/course_sessions/887252/labs/198828)
-__
+__ Tasks
 
 Sat, 19 Mar 2022 (1hr20m 5 Credits)
 
@@ -1697,6 +2153,8 @@ Sat, 19 Mar 2022 (1hr20m 5 Credits)
     - Task 5. Evaluate classification model performance
     - Task 6. Improve model performance with feature engineering
     - Task 7. Predict which new visitors will come back and purchase
+..
+__ Notes
 
 - Notes:
     - [Course dataset](https://console.cloud.google.com/bigquery?p=data-to-insights&d=ecommerce&t=web_analytics&page=table)
@@ -1707,6 +2165,8 @@ Sat, 19 Mar 2022 (1hr20m 5 Credits)
         - [Boosted Decision Trees (XGBoost)](https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-syntax-create-boosted-tree)
         - [AutoML Tables Models](https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-syntax-create-automl)
         - [Importing Custom TensorFlow Models](https://cloud.google.com/bigquery-ml/docs/reference/standard-sql/bigqueryml-syntax-create-tensorflow)
+..
+__   Task 1. Explore ecommerce data
 
 - Task 1. Explore ecommerce data
     - Data is already in BigQuery
@@ -1762,6 +2222,8 @@ SELECT
 FROM all_visitor_stats
 GROUP BY will_buy_on_return_visit
 ```
+..
+__   Task 2. Select features and create your training dataset
 
 - Task 2. Select features and create your training dataset
 
@@ -1789,10 +2251,14 @@ FROM
 ORDER BY time_on_site DESC
 LIMIT 10;
 ```
+..
+__   Task 3. Create a BigQuery dataset to store models
 
 - Task 3. Create a BigQuery dataset to store models
     - Need a dataset to store models
     - Dataset ID: ecommerce
+..
+__   Task 4. Select a BigQuery ML model type and specify options
 
 - Task 4. Select a BigQuery ML model type and specify options
     - Create a logistic regression model
@@ -1831,6 +2297,8 @@ FROM
   USING (fullVisitorId)
 ;
 ```
+..
+__   Task 5. Evaluate classification model performance
 
 - Task 5. Evaluate classification model performance
     - Use Receiver Operating Characteristics (ROC) to evaluate
@@ -1870,6 +2338,8 @@ FROM
   USING (fullVisitorId)
 ));
 ```
+..
+__   Task 6. Improve model performance with feature engineering
 
 - Task 6. Improve model performance with feature engineering
     - Add more features:
@@ -1990,6 +2460,8 @@ SELECT * EXCEPT(unique_session_id) FROM (
 )
 ));
 ```
+..
+__   Task 7. Predict which new visitors will come back and purchase
 
 - Task 7. Predict which new visitors will come back and purchase
 
