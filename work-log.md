@@ -3,6 +3,17 @@
 
 
 ----
+**Tue, 05 Apr 2022**
+__
+
+- Continued questing in ChaiyoGCP!. [web](https://events.withgoogle.com/chaiyogcp-challenge/home-english/#content)
+    - Tied-up with something else today so completed very few labs
+        - Setting up Jenkins on Kubernetes Engine
+        - Continuous Delivery with Jenkins in Kubernetes Engine
+..
+
+
+----
 **Mon, 04 Apr 2022**
 __
 
