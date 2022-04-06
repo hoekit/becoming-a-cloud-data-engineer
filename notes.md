@@ -11,6 +11,293 @@ __
 
 
 ----
+### Speech Accuracy
+__ Concepts
+
+- Word Error Rate (WER)
+    - percentage of incorrect transcriptions in the set
+    - lower error rate means higher accuracy
+
+- Ground truth
+    - refers to 100% accurate (usually human) transcription to compare
+      against to measure accuracy
+
+- Types of error
+    - Insertion Errors (I)
+        - Words present in transcript but not in ground truth
+    - Deletion Errors (D)
+        - Words in ground truth but not in transcript
+    - Substitution Errors (S)
+        - Words present in both but transcribed incorrectly
+
+- WER = (I + D + S) / N
+    - Note WER can be > 100% if num errors > num words
+
+- Jaccard Index
+    - Measures correctness (broadly speaking)
+    - number of words that are the same same over total number of words
+
+- F1 Score
+    - Measure precision vs recall
+    - Precision almost 1  ⇒  Very few false positives
+    - Recall almost 1     ⇒  Very few false negatives
+..
+__ Practice
+
+- Need 30 mins to 3 hours of audio with ground truth for sampling
+
+- Use the same equipment to get the input as used in transcription
+
+..
+
+
+----
+### Firebase
+__
+
+- Lab
+    - https://www.cloudskillsboost.google/focuses/660?parent=catalog
+
+- Sample code
+    - git clone https://github.com/firebase/friendlychat-web
+
+- Firebase Console: https://console.firebase.google.com/
+    - Add project
+    - Add a Firebase Web App
+    - Enable Google sign-in for Firebase Authentication
+    - Enable Cloud Firestore
+..
+__ firebase commands
+
+- firebase --version
+    - Check that firebase CLI is installed
+
+- firebase login --no-localhost
+    - Authorize the Firebase CLI
+    - `--no-localhost` cos we are in a remote shell
+
+- firebase use --add
+    - Tell firebase CLI which project to use, like use database
+    - Give project an alias like `staging`
+
+- firebase use staging
+    - Use the staging project
+
+- firebase serve --only hosting
+    - Serve app locally
+
+- npm install
+    - Downloads the Firebase SDK. See the package.json file
+
+- npm run start &
+    - Run Webpack continuously
+
+- Edit the file: src/firebase-config.js
+    - Get the config from Firebase Console
+
+- firebase deploy --except functions --token $(gcloud auth application-default print-access-token)
+    - Redeploy app
+..
+
+----
+### ASP.NET Core
+__ dotnet
+
+- dotnet --version
+    - Check that .NET Core is installed
+
+- export DOTNET_CLI_TELEMETRY_OPTOUT=1
+    - Disable app telemetry
+
+- dotnet new razor -o HelloWorldAspNetCore
+    - Create a skeleton app
+
+- dotnet run --urls=http://localhost:8080
+    - Run the app in the current folder
+
+- dotnet publish -c Release
+    - Publish the app to get a self-contained DLL
+    - Published into: bin/Release/netcoreapp3.1/publish/
+..
+__ Dockerfile
+
+FROM gcr.io/google-appengine/aspnetcore:3.1
+ADD ./ /app
+# Tells .NET Core which port to listen to
+ENV ASPNETCORE_URLS=http://*:${PORT}
+WORKDIR /app
+ENTRYPOINT [ "dotnet", "HelloWorldAspNetCore.dll" ]
+..
+
+----
+### Cloud Ops
+__ Github repo: https://github.com/GoogleCloudPlatform/cloud-ops-sandbox.git
+..
+
+
+----
+### Challenge Lab: Deploy to Kubernetes in Google Cloud
+__ Lab: https://www.cloudskillsboost.google/focuses/10457?parent=catalog
+..
+__ Team Standards
+
+Team Standards:
+    - Region: us-east1
+    - Zone: use-east1-b
+    - Use project VPCs
+    - Use n1-standard-1
+
+Naming Standards:
+    - team-resource e.g. kraken-webserver
+..
+__ Task 0: Setup
+
+- Setup project region and zone
+    - gcloud config set compute/region us-east1
+    - gcloud config set compute/zone us-east1-b
+
+- Setup project ID
+    - export PROJECT_ID=qwiklabs-gcp-04-de61d1b485e8
+
+..
+__ Task 1: Create a Docker image and store the Dockerfile
+
+- Install marking script:
+    - source < $(gsutil cat gs://cloud-training/gsp318/marking/setup_marking_v2.sh)
+
+- Cloud source repo: valkyrie-app
+    - gcloud source repos clone valkyrie-app
+
+- Create valkyrie-app/Dockerfile:
+    ```
+        FROM golang:1.0
+        WORKDIR /go/src/app
+        COPY source .
+        RUN go install -v
+        ENTRYPOINT ["app", "-single=true"."-port=8080"]
+    ```
+
+- Create a docker image:
+    - docker build -t valkyrie-prod:v0.0.2 .
+    - image: FIXME
+    - tag: FIXME
+
+- Check progress:
+    - ./step1_v2.sh
+..
+__ Task 2: Test the created Docker image
+
+- Launch container, mapping port 8080 of Cloud Shell to image
+    - docker run -p 8080:8080 --name valkyrie-image valkyrie-prod:v0.0.2 &
+
+- Check progress:
+    - ./step2_v2.sh
+
+- Stop the container when done
+    - docker stop valkyrie-image
+..
+__ Task 3: Push the Docker image in the Container Registry
+
+- Retag image for GCR:
+    - docker tag valkyrie-prod:v0.0.2 gcr.io/$PROJECT_ID/valkyrie-prod:v0.0.2
+
+- Push to GCR:
+    - docker push gcr.io/$PROJECT_ID/valkyrie-prod:v0.0.2
+..
+__ Task 4: Create and expose a deployment in Kubernetes
+
+- Check the deployment and service, understand what's being deployed,
+  probably some simple go-app behind a service:
+    - vim valkyrie-app/k8s/deployment.yaml
+    - vim valkyrie-app/k8s/service.yaml
+    - IMAGE_HERE: gcr.io/qwiklabs-gcp-04-de61d1b485e8/valkyrie-prod:v0.0.2
+
+- Fix any issues found in the yaml files
+    - FIXME
+
+- Use the provided Kubernetes cluster: valkyrie-dev
+    - gcloud container clusters list
+
+- Get kubectl credentials:
+    - gcloud container clusters get-credentials valkyrie-dev
+
+- Deploy the pods and check that it's working
+    - kubectl apply -f valkyrie-app/k8s/deployment.yaml
+    - kubectl deployments
+    - kubectl pods
+
+- Deploy the service and check that it's working
+    - kubectl apply -f valkyrie-app/k8s/service.yaml
+    - kubectl svc
+    - Access the External IP to see if it's working nicely
+..
+__ Task 5: Update the deployment with a new version of valkyrie-app
+
+- Get the deployment name
+    - kubectl get deployments
+
+- Scale the deployment
+    - kubectl scale deployment DEPLOYMENT --replicas=N
+    - kubectl scale deployment valkyrie-dev --replicas=3
+
+- Merge in Kurt's changes:
+    - git checkout master
+    - git merge origin/kurt-dev
+
+- Rebuild the valkyrie app if all is good
+    - docker build -t valkyrie-prod:v0.0.3  
+
+- Run the app to see what it does:
+    - docker run -p 8080:8080 --name valkyrie-image3 valkyrie-prod:v0.0.3
+
+- Retag and push to GCR
+    - docker tag IMAGE:TAG2 gcr.io/$PROJECT_ID/IMAGE:TAG2
+    - docker tag valkyrie-prod:v0.0.3 gcr.io/$PROJECT_ID/valkyrie-prod:v0.0.3
+    - docker push gcr.io/$PROJECT_ID/valkyrie-prod:v0.0.3
+
+- Update the deployment and apply:
+    - vim valkyrie-app/k8s/deployment.yaml
+        - Use the updated version TAG2
+    - kubectl get pods
+    - kubectl apply -f valkyrie-app/k8s/deployment.yaml
+    - kubectl get pods
+
+- Service is unaffected so no need to redeploy
+    - kubectl svc
+    - Access the External IP to see if it's working like the local Docker image
+..
+__ Task 6: Create a pipeline in Jenkins to deploy your app
+
+- There is a Jenkins deployment in valkyrie-dev cluster already
+    - Use it
+
+- Get the Jenkins admin password:
+    - printf $(kubectl get secret cd-jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 --decode);echo
+
+- Get the Jenkins pod name and port forward from Cloud Shell to pod:
+    - kubectl get pods
+    - export POD_NAME=$(kubectl get pods --namespace default -l "app.kubernetes.io/component=jenkins-master" -l "app.kubernetes.io/instance=cd" -o jsonpath="{.items[0].metadata.name}")
+    - kubectl port-forward $POD_NAME 8080:8080 >> /dev/null &
+
+- Login to Jenkins
+    - See: https://www.cloudskillsboost.google/focuses/1104?parent=catalog
+
+- Jenkins: Add a Google Service Account
+
+- Jenkins: Create a Multibranch Pipeline
+    - git repo: FIXME
+        - https://source.developers.google.com/p/[PROJECT_ID]/r/default
+        - Or `git remote -v` in the repo to see the remote
+
+- Cloud Shell: Edit `valkyrie-app/Jenkinsfile` and `valkyrie-app/source/html.go`
+    - git add and push changes to repo
+    - manually trigger the build
+
+
+..
+
+
+----
 ### Terraform
 __ What is it:
 
@@ -1757,6 +2044,9 @@ __ kubectl commands
 
 - `kubectl get pods -o jsonpath --template='{range .items[*]}{.metadata.name}{"\t"}{"\t"}{.spec.containers[0].image}{"\n"}{end}'`
     - Get pod versions
+
+- kubectl run -it --rm python --image=python:3.6-alpine --restart=Never sh
+    - Run a minimal container with python 3.6 installed
 
 ..
 __ References:
