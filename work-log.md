@@ -3,6 +3,27 @@
 
 
 ----
+**Wed, 06 Apr 2022**
+__
+
+- Continued questing in ChaiyoGCP!. [web](https://events.withgoogle.com/chaiyogcp-challenge/home-english/#content)
+    - Earned a Skill Badge
+        - <img src="img/notes-quest-deploy-to-kubernetes-in-google-cloud.png" alt="" width="30%"/>
+    - And a Completion Badge
+        - <img src="img/notes-quest-devops-essentials.png" alt="" width="30%"/>
+    - Completed Activities today
+        - Deploy to Kubernetes in Google Cloud: Challenge Lab
+        - Deploy Kubernetes Load Balancer Service with Terraform
+        - Troubleshooting Workloads on GKE for Site Reliability Engineers
+        - Deploy Node.js Express Application in App Engine
+        - Build and Launch an ASP.NET Core App from Google Cloud Shell
+        - Deploy ASP.NET Core App to Kubernetes Engine
+        - Deploying Memcached on Kubernetes Engine
+        - Speech to Text Transcription with the Cloud Speech API
+        - Translate Text with the Cloud Translation API
+..
+
+----
 **Tue, 05 Apr 2022**
 __
 
