@@ -11,6 +11,713 @@ __
 
 
 ----
+### Challenge Lab: Set Up and Configure a Cloud Environment in Google Cloud
+__ Setup
+
+- team name: griffin
+- region: us-east1
+- zone: us-east1-b
+- compute: n1-standard-1
+..
+__ Task 1: Create development VPC manually
+
+- VPC name: griffin-dev-vpc
+
+- Subnet name: griffin-dev-wp
+    Range: 192.168.16.0/20
+
+- Subnet: griffin-dev-mgmt
+    Range: 192.168.32.0/20
+
+gcloud compute networks create griffin-dev-vpc --subnet-mode=custom
+
+gcloud compute networks subnets create griffin-dev-wp --network=griffin-dev-vpc --region=us-east1 --range=192.168.16.0/20
+
+gcloud compute networks subnets create griffin-dev-mgmt --network=griffin-dev-vpc --region=us-east1 --range=192.168.32.0/20
+
+# Check what ports WordPress needs opened: tcp:80?
+gcloud compute firewall-rules create griffin-dev-vpc-allow-icmp-ssh --direction=INGRESS --priority=1000 --network=griffin-dev-vpc --action=ALLOW --rules=icmp,tcp:22,tcp:80 --source-ranges=0.0.0.0/0
+..
+__ Task 2: Create production VPC manually
+
+- VPC Name: griffin-prod-vpc
+
+- Subnet: griffin-prod-wp
+    Range: 192.168.48.0/20
+
+- Subnet: griffin-prod-mgmt
+    Range: 192.168.64.0/20
+
+gcloud compute networks create griffin-prod-vpc --subnet-mode=custom
+
+gcloud compute networks subnets create griffin-prod-wp --network=griffin-prod-vpc --region=us-east1 --range=192.168.48.0/20
+
+gcloud compute networks subnets create griffin-prod-mgmt --network=griffin-prod-vpc --region=us-east1 --range=192.168.64.0/20
+
+# Check what ports WordPress needs opened: tcp:80?
+gcloud compute firewall-rules create griffin-prod-vpc-allow-icmp-ssh --direction=INGRESS --priority=1000 --network=griffin-prod-vpc --action=ALLOW --rules=icmp,tcp:22,tcp:80 --source-ranges=0.0.0.0/0
+..
+__ Task 3: Create bastion host
+
+- Create new VM Instance
+
+- Name: griffin-vm-bastion
+- machine-type: n1-standard-2
+    - Need 2 vCPU to connect to 2 NICs
+    - See: https://cloud.google.com/vpc/docs/create-use-multiple-interfaces#max-interfaces
+- Network Interface 0
+    - Network: griffin-dev-vpc
+    - Subnetworkk: griffin-dev-mgmt
+
+- Network Interface 2
+    - Network: griffin-prod-vpc
+    - Subnetworkk: griffin-prod-mgmt
+..
+__ Task 4: Create and configure Cloud SQL Instance
+
+- MySQL Cloud SQL Instance
+    - Name: griffin-dev-db
+    - Region: us-east1
+    - Takes over five (5) minutes
+
+gcloud sql connect griffin-dev-db --user=root
+
+CREATE DATABASE wordpress;
+GRANT ALL PRIVILEGES ON wordpress.* TO "wp_user"@"%" IDENTIFIED BY "stormwind_rules";
+FLUSH PRIVILEGES;
+..
+__ Task 5: Create Kubernetes cluster
+
+- Kubernetes Cluster
+    - name: griffin-dev
+    - 2-node (n1-standard-4)
+    - subnet: griffin-dev-wp
+    - zone: us-east1-b
+    - See: https://cloud.google.com/sdk/gcloud/reference/container/clusters/create
+
+gcloud container clusters create griffin-dev --num-nodes=2 --machine-type=n1-standard-4 --subnetwork=griffin-dev-wp --network=griffin-dev-vpc --zone=us-east1-b
+..
+__ Task 6: Prepare the Kubernetes cluster
+
+gsutil -m cp -r gs://cloud-training/gsp321/wp-k8s .
+
+- Need to setup secrets and volume via `wp-env.yaml`
+
+vim wp-env.yaml
+    - Configure:
+        - username: wp_user
+        - password: stormwind_rules
+
+gcloud container clusters get-credentials griffin-dev --zone=us-east1
+
+kubectl create -f wp-env.yaml
+
+    - Create the secret and volume
+    - See: https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#-em-secret-em-
+    - # Or below. Most likely above if wp-env.yaml includes storage
+    - # kubectl create secret generic wp-env --from-file wp-env.yaml
+    - See: https://kubernetes.io/docs/reference/kubectl/cheatsheet/#creating-objects
+
+export GOOGLE_CLOUD_PROJECT=$(gcloud config get-value project)
+gcloud iam service-accounts keys create key.json --iam-account=cloud-sql-proxy@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com
+
+    - Create keys for a service account
+    - See: https://cloud.google.com/sdk/gcloud/reference/iam/service-accounts/keys
+
+kubectl create secret generic cloudsql-instance-credentials --from-file key.json
+
+    - Include created keys as secrets
+..
+__ Task 7: Create a WordPress deployment
+
+vim wp-deployment.yaml
+    - Replace YOUR_SQL_INSTANCE with griffin-dev-db's Instance connection name
+    - Get the Instance connection name from the Cloud SQL instance.
+
+kubectl apply -f wp-deployment.yaml
+kubectl deployments
+kubectl pods
+
+kubectl apply -f wp-service.yaml
+# External IP: 34.139.69.109
+..
+__ Task 8: Enable monitoring
+
+- See: https://cloud.google.com/monitoring/uptime-checks/
+- See: https://www.cloudskillsboost.google/focuses/10599?parent=catalog
+- https://cloud.google.com/monitoring/api/resources#tag_uptime_url
+
+- Nav > Monitoring > Uptime checks > Create Uptime Check
+    - Title: WordPress Uptime Check
+    - Protocol: HTTP
+    - Resource Type: ??
+    - Applies to: GKE Service
+    - Check Frequency: 1 min
+..
+__ Task 9: Provide access for an additional engineer
+
+- Grant `editor` role to the project
+..
+
+__ File: wp-env.yaml
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: wordpress-volumeclaim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 200Gi
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: database
+type: Opaque
+stringData:
+  username: wp_user
+  password: stormwind_rules
+..
+__ File: wp-deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  labels:
+    app: wordpress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+        - image: wordpress
+          name: wordpress
+          env:
+          - name: WORDPRESS_DB_HOST
+            value: 127.0.0.1:3306
+          - name: WORDPRESS_DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: database
+                key: username
+          - name: WORDPRESS_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: database
+                key: password
+          ports:
+            - containerPort: 80
+              name: wordpress
+          volumeMounts:
+            - name: wordpress-persistent-storage
+              mountPath: /var/www/html
+        - name: cloudsql-proxy
+          image: gcr.io/cloudsql-docker/gce-proxy:1.11
+          command: ["/cloud_sql_proxy",
+                    "-instances=qwiklabs-gcp-01-57a76a321cf4:us-east1:griffin-dev-db=tcp:3306",
+                    "-credential_file=/secrets/cloudsql/key.json"]
+          securityContext:
+            runAsUser: 2  # non-root user
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: cloudsql-instance-credentials
+              mountPath: /secrets/cloudsql
+              readOnly: true
+      volumes:
+        - name: wordpress-persistent-storage
+          persistentVolumeClaim:
+            claimName: wordpress-volumeclaim
+        - name: cloudsql-instance-credentials
+          secret:
+            secretName: cloudsql-instance-credentials
+..
+__ File: wp-service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: wordpress
+  name: wordpress
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: wordpress
+..
+
+----
+### Challenge Lab: Serverless Cloud Run Development 
+__ Setup
+
+gcloud config set project $(gcloud projects list --format='value(PROJECT_ID)' --filter='qwiklabs-gcp')
+
+    - Set default project
+
+
+gcloud config set run/region us-central1
+
+    - Set region
+
+
+gcloud config set run/platform managed
+
+    - Set Cloud Run platform type
+
+
+git clone https://github.com/rosera/pet-theory.git && cd pet-theory/lab07
+
+    - Clone repo
+..
+__ Task 1: Enable a Public Service
+
+```
+    FIELD                   VALUE
+    --------                -----------
+    Billing Image           billing-staging-api:0.1
+    Billing Service         public-billing-service-937
+    Authentication          unauthenticated
+    Code                    pet-theory/lab07/unit-api-billing
+```
+
+cd ~/pet-theory/lab07/unit-api-billing
+
+GOOGLE_CLOUD_PROJECT=$(gcloud info --format='value(config.project)')
+
+gcloud builds submit --tag gcr.io/$GOOGLE_CLOUD_PROJECT/billing-staging-api:0.1
+
+BILL_STG_SVC=public-billing-service-937
+
+gcloud run deploy $BILL_STG_SVC --image gcr.io/$GOOGLE_CLOUD_PROJECT/billing-staging-api:0.1 --max-instances=1
+
+BILL_STG_URL=$(gcloud run services describe $BILL_STG_SVC --format "value(status.url)")
+
+curl -X GET $BILL_STG_URL
+..
+__ Task 2: Deploy a Frontend Service
+
+
+```
+    FIELD                   VALUE
+    --------                -----------
+    Image Name              frontend-staging:0.1
+    Service Name            frontend-staging-service-735
+    Authentication          unauthenticated
+    Code                    pet-theory/lab07/staging-frontend-billing
+```
+
+cd ~/pet-theory/lab07/staging-frontend-billing
+
+gcloud builds submit --tag gcr.io/$GOOGLE_CLOUD_PROJECT/frontend-staging:0.1
+
+FE_STG_SVC=frontend-staging-service-735
+
+gcloud run deploy $FE_STG_SVC --image gcr.io/$GOOGLE_CLOUD_PROJECT/frontend-staging:0.1 --max-instances=1
+
+FE_STG_URL=$(gcloud run services describe $FE_STG_SVC --format "value(status.url)")
+
+curl -X GET $FE_STG_URL
+..
+__ Task 3: Deploy a Private Service
+
+First, delete the existing Billing Service using Cloud Console.
+
+
+```
+    FIELD                   VALUE
+    --------                -----------
+    Image Name              billing-staging-api:0.2
+    Service Name            private-billing-service-844
+    Repository              gcr.io
+    Authentication          authenticated
+    Code                    pet-theory/lab07/staging-api-billing
+```
+
+FOLDER=~/pet-theory/lab07/staging-api-billing
+cd $FOLDER
+
+GOOGLE_CLOUD_PROJECT=$(gcloud info --format='value(config.project)')
+IMAGE_NAME=billing-staging-api:0.2
+gcloud builds submit --tag gcr.io/$GOOGLE_CLOUD_PROJECT/$IMAGE_NAME
+
+SERVICE_NAME=private-billing-service-844
+gcloud run deploy $SERVICE_NAME --image gcr.io/$GOOGLE_CLOUD_PROJECT/$IMAGE_NAME --no-allow-unauthenticated --max-instances=1
+
+SERVICE_URL=$(gcloud run services describe $SERVICE_NAME --format "value(status.url)")
+
+curl -X get -H "Authorization: Bearer $(gcloud auth print-identity-token)" $SERVICE_URL
+
+BILLING_URL=$(gcloud run services describe $SERVICE_NAME --format "value(status.url)")
+
+curl -X get -H "Authorization: Bearer $(gcloud auth print-identity-token)" $BILLING_URL
+..
+__ Task 4: Create a Billing Service Account
+
+```
+FIELD                   VALUE
+--------                -----------
+     SERVICE_ACCOUNT=billing-service-sa-512
+        DISPLAY_NAME='"Billing Service Cloud Run"'
+        SERVICE_NAME=billing-service
+                ROLE=''
+GOOGLE_CLOUD_PROJECT=$(gcloud info --format='value(config.project)')
+```
+
+gcloud iam service-accounts create $SERVICE_ACCOUNT --display-name=$DISPLAY_NAME
+
+# Not sure if step below is required. Probably not since Role is
+# undefined and the binding will likely not work
+# See: https://cloud.google.com/sdk/gcloud/reference/run/services/add-iam-policy-binding
+# gcloud run services add-iam-policy-binding $SERVICE_NAME --member=serviceAccount:$SERVICE_ACCOUNT@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com $ROLE
+..
+__ Task 5: Deploy the Billing Service
+
+```
+FIELD                   VALUE
+--------                -----------
+          IMAGE_NAME=billing-prod-api:0.1
+        SERVICE_NAME=billing-prod-service-378
+      # Repository  =  gcr.io
+      AUTHENTICATION=--no-allow-unauthenticated
+          FOLDER='~/pet-theory/lab07/prod-api-billing'
+     SERVICE_ACCOUNT=billing-service-sa-512
+GOOGLE_CLOUD_PROJECT=$(gcloud info --format='value(config.project)')
+```
+
+cd $FOLDER
+
+gcloud builds submit --tag gcr.io/$GOOGLE_CLOUD_PROJECT/$IMAGE_NAME
+
+# See: https://cloud.google.com/sdk/gcloud/reference/run/deploy
+# The service account represents the identity of the running revision
+# Probably needed because that's the identity used to access the data backend
+gcloud run deploy $SERVICE_NAME --image gcr.io/$GOOGLE_CLOUD_PROJECT/$IMAGE_NAME $AUTHENTICATION --max-instances=1 --service-account=$SERVICE_ACCOUNT
+
+PROD_BILLING_URL=$(gcloud run services describe $SERVICE_NAME --format "value(status.url)")
+
+curl -X get -H "Authorization: Bearer $(gcloud auth print-identity-token)" $PROD_BILLING_URL
+..
+__ Task 6: Frontend Service Account
+
+```
+FIELD                   VALUE
+--------                -----------
+     SERVICE_ACCOUNT=frontend-service-sa-851
+        DISPLAY_NAME='"Billing Service Cloud Run Invoker"'
+        SERVICE_NAME=frontend-prod-service
+                ROLE='--role=roles/run.invoker'
+GOOGLE_CLOUD_PROJECT=$(gcloud info --format='value(config.project)')
+```
+
+gcloud iam service-accounts create $SERVICE_ACCOUNT --display-name=$DISPLAY_NAME
+
+# See: https://cloud.google.com/sdk/gcloud/reference/run/services/add-iam-policy-binding
+# Here, we're binding the service account to the service and giving the
+# member i.e. Service account the run.invoker role
+gcloud run services add-iam-policy-binding $SERVICE_NAME --member=serviceAccount:$SERVICE_ACCOUNT@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com $ROLE
+
+See: https://cloud.google.com/sdk/gcloud/reference/run/services/add-iam-policy-binding
+..
+__ Task 7: Redeploy the Frontend Service
+
+```
+FIELD                   VALUE
+--------                -----------
+          IMAGE_NAME=frontend-prod:0.1
+        SERVICE_NAME=frontend-prod-service-834
+      # Repository  =  gcr.io
+      AUTHENTICATION=''
+          FOLDER=pet-theory/lab07/prod-frontend-billing
+     SERVICE_ACCOUNT=frontend-service-sa-851
+GOOGLE_CLOUD_PROJECT=$(gcloud info --format='value(config.project)')
+```
+
+cd $FOLDER
+
+gcloud builds submit --tag gcr.io/$GOOGLE_CLOUD_PROJECT/$IMAGE_NAME
+
+gcloud run deploy $SERVICE_NAME --image gcr.io/$GOOGLE_CLOUD_PROJECT/$IMAGE_NAME $AUTHENTICATION --max-instances=1 --service-account=$SERVICE_ACCOUNT
+
+# This moved from Task 6 here:
+gcloud run services add-iam-policy-binding $SERVICE_NAME --member=serviceAccount:$SERVICE_ACCOUNT@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com $ROLE
+
+SERVICE_URL=$(gcloud run services describe $SERVICE_NAME --format "value(status.url)")
+
+curl -X get -H "Authorization: Bearer $(gcloud auth print-identity-token)" $SERVICE_URL
+
+PROD_FRONTEND_URL=$(gcloud run services describe $SERVICE_NAME --format "value(status.url)")
+
+curl -X get -H "Authorization: Bearer $(gcloud auth print-identity-token)" $PROD_FRONTEND_URL
+..
+
+
+----
+### Google APIs
+__ Enable APIs
+
+- Enable the Cloud Run API
+    - gcloud services enable run.googleapis.com
+
+```
+    Name            API
+    ------------    -----------------------------------
+    Cloud Build     cloudbuild.googleapis.com
+    Cloud Storage   storage-component.googleapis.com
+    Cloud Run       run.googleapis.com
+```
+..
+
+
+----
+### Google Firestore
+__
+..
+
+
+----
+### Google Cloud Run
+__ Steps to use Cloud Run to run LibreOffice to convert PDF
+
+- Lab: Build a Server App with Cloud Run that Creates PDF Files
+    - https://www.cloudskillsboost.google/focuses/8390?parent=catalog
+
+- Enable the Cloud Run API
+    - gcloud services enable run.googleapis.com
+
+- Deploy the Cloud Run prototype
+    - git clone https://github.com/rosera/pet-theory.git
+    - See: lab03
+
+gcloud run deploy pdf-converter --image gcr.io/$GOOGLE_CLOUD_PROJECT/pdf-converter --platform managed --region us-central1 --no-allow-unauthenticated --max-instances=1
+
+    - Deploys container from GCR image
+
+
+SERVICE_URL=$(gcloud beta run services describe pdf-converter --platform managed --region us-central1 --format="value(status.url)")
+
+    - Store service URL in a variable
+
+curl -X POST -H "Authorization: Bearer $(gcloud auth print-identity-token)" $SERVICE_URL
+
+    - Send authenticated request
+
+
+gcloud iam service-accounts create pubsub-cloud-run-invoker --display-name "PubSub Cloud Run Invoker"
+
+    - Create a service account that can Pub/Sub can run
+
+
+gcloud beta run services add-iam-policy-binding pdf-converter --member=serviceAccount:pubsub-cloud-run-invoker@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com --role=roles/run.invoker --platform managed --region us-central1
+
+    - Give the service account named `pubsub-cloud-run-invoker` permission to invoke the Cloud Run service
+
+
+gcloud projects list
+
+    - Show projects with corresponding project number
+
+
+PROJECT_NUMBER=
+
+    - Store project number of current project in a variable
+
+
+gcloud projects add-iam-policy-binding $GOOGLE_CLOUD_PROJECT --member=serviceAccount:service-$PROJECT_NUMBER@gcp-sa-pubsub-iam.gserviceaccount.com --role=roles/iam.serviceAccountTokenCreator
+
+    - Add an IAM policy to the current project to be able to create Pub/Sub authentication tokens
+
+
+gcloud beta pubsub subscriptions create pdf-conv-sub --topic new-doc --push-endpoint=$SERVICE_URL --push-auth-service-account=pubsub-cloud-run-invoker@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com
+
+    - Create a Pub/Sub subscription that invokes a HTTP endpoint whenever a message is publised on the topic "new-doc"
+
+
+FROM node:12
+RUN apt-get update -y \
+    && apt-get install -y libreoffice \
+    && apt-get clean
+WORKDIR /usr/src/app
+COPY package.json package*.json ./
+RUN npm install --only=production
+COPY . .
+CMD [ "npm", "start" ]
+
+    - Update contents of Dockerfirle to instll libreoffice
+
+..
+__ Check logs
+
+- Go to Logging
+    - Filter by: resource_type="cloud_run_revision"
+
+..
+__ Resources
+
+- Cloud Run at Next '19
+    - https://youtu.be/16vANkKxoAU?t=1317
+..
+
+__ gcloud run with 2GB memory
+
+gcloud run deploy pdf-converter \
+  --image gcr.io/$GOOGLE_CLOUD_PROJECT/pdf-converter \
+  --platform managed \
+  --region us-central1 \
+  --memory=2Gi \
+  --no-allow-unauthenticated \
+  --max-instances=1 \
+  --set-env-vars PDF_BUCKET=$GOOGLE_CLOUD_PROJECT-processed
+..
+__ Example index.js file
+
+const {promisify} = require('util');
+const {Storage}   = require('@google-cloud/storage');
+const exec        = promisify(require('child_process').exec);
+const storage     = new Storage();
+const express     = require('express');
+const bodyParser  = require('body-parser');
+const app         = express();
+app.use(bodyParser.json());
+const port = process.env.PORT || 8080;
+app.listen(port, () => {
+  console.log('Listening on port', port);
+});
+app.post('/', async (req, res) => {
+  try {
+    const file = decodeBase64Json(req.body.message.data);
+    await downloadFile(file.bucket, file.name);
+    const pdfFileName = await convertFile(file.name);
+    await uploadFile(process.env.PDF_BUCKET, pdfFileName);
+    await deleteFile(file.bucket, file.name);
+  }
+  catch (ex) {
+    console.log(`Error: ${ex}`);
+  }
+  res.set('Content-Type', 'text/plain');
+  res.send('\n\nOK\n\n');
+})
+function decodeBase64Json(data) {
+  return JSON.parse(Buffer.from(data, 'base64').toString());
+}
+async function downloadFile(bucketName, fileName) {
+  const options = {destination: `/tmp/${fileName}`};
+  await storage.bucket(bucketName).file(fileName).download(options);
+}
+async function convertFile(fileName) {
+  const cmd = 'libreoffice --headless --convert-to pdf --outdir /tmp ' +
+              `"/tmp/${fileName}"`;
+  console.log(cmd);
+  const { stdout, stderr } = await exec(cmd);
+  if (stderr) {
+    throw stderr;
+  }
+  console.log(stdout);
+  pdfFileName = fileName.replace(/\.\w+$/, '.pdf');
+  return pdfFileName;
+}
+async function deleteFile(bucketName, fileName) {
+  await storage.bucket(bucketName).file(fileName).delete();
+}
+async function uploadFile(bucketName, fileName) {
+  await storage.bucket(bucketName).upload(`/tmp/${fileName}`);
+}
+..
+__ Pattern
+
+
+
+..
+
+
+----
+### Google Cloud Build
+__
+
+gcloud services enable cloudbuild.googleapis.com
+
+    - Enable the Cloud Run API
+
+
+gcloud builds submit --tag gcr.io/$GOOGLE_CLOUD_PROJECT/pdf-converter
+
+    - Builds a container and puts it in GCR
+    - Uses the Dockerfile in the current directory
+..
+
+
+----
+### Google Cloud Storage
+__ gsutil
+
+gsutil mb gs://$GOOGLE_CLOUD_PROJECT-upload
+    - Create the receiving bucket
+
+gsutil mb gs://$GOOGLE_CLOUD_PROJECT-processed
+    - Create the done bucket
+
+gsutil notification create -t new-doc -f json -r OBJECT_FINALIZE gs://$GOOGLE_CLOUD_PROJECT-upload
+    - Tells Cloud Storage to send a Pub/Sub notification whenever a new file lands on the upload bucket
+    - Topic is 'new-doc'
+..
+
+
+----
+### Google IAM
+__ gcloud iam
+
+gcloud iam service-accounts create pubsub-cloud-run-invoker --display-name "PubSub Cloud Run Invoker"
+
+    - Create a service account that can Pub/Sub can run
+
+
+gcloud projects list
+
+    - Show projects with corresponding project number
+
+
+PROJECT_NUMBER=408692058566
+
+    - Store project number of current project in a variable
+
+
+gcloud projects add-iam-policy-binding $GOOGLE_CLOUD_PROJECT --member=serviceAccount:service-$PROJECT_NUMBER@gcp-sa-pubsub.iam.gserviceaccount.com --role=roles/iam.serviceAccountTokenCreator
+
+    - Add an IAM policy to the current project to be able to create Pub/Sub authentication tokens
+
+
+gcloud projects add-iam-policy-binding $PROJECT_ID --member=user:student-02-2545ad7ce1ab@qwiklabs.net --role=roles/logging.viewer
+
+    - Assigns `logging.viewer` role to `student-02-2545ad7ce1ab@qwiklabs.net`
+    - Able to view logs across the entire project
+    - See list of roles: https://cloud.google.com/iam/docs/understanding-roles#predefined_roles
+
+
+gcloud projects add-iam-policy-binding $PROJECT_ID --member=user:student-02-2545ad7ce1ab@qwiklabs.net --role=roles/source.writer
+
+    - Assigns `source.writer` role to `student-02-2545ad7ce1ab@qwiklabs.net`
+    - Able to read write to source control repository
+
+
+..
+
+
+----
+### Google Pub
+
+----
 ### Speech Accuracy
 __ Concepts
 
@@ -68,6 +775,18 @@ __
     - Enable Cloud Firestore
 ..
 __ firebase commands
+
+npm init --yes
+npm install -g firebase-tools
+
+    - Install firebase CLI into Cloud Shell
+
+
+firebase login --no-localhost
+
+    - Authorize Cloud Shell to access firebase
+    - Similar to kubectl container clusters get-credentials
+
 
 - firebase --version
     - Check that firebase CLI is installed
@@ -2290,6 +3009,21 @@ __ Best Practices
 
 ..
 
+__ Dockerfile: node + libreoffice
+
+FROM node:12
+RUN apt-get update -y \
+    && apt-get install -y libreoffice \
+    && apt-get clean
+WORKDIR /usr/src/app
+COPY package.json package*.json ./
+RUN npm install --only=production
+COPY . .
+CMD [ "npm", "start" ]
+..
+
+
+
 ----
 ### Google Apps Script
 __
@@ -2340,7 +3074,7 @@ __ From Flat Workloads to Seasonal Workloads
 
 
 ----
-### Google Pub/Sub
+### Google Pub/Sub (PubSub)
 __
 
 - Pub/Sub
@@ -2417,6 +3151,17 @@ __
     - Differences between Google Pub/Sub and Apache Kafka, 2016
       [web](https://www.jesse-anderson.com/2016/07/apache-kafka-and-google-cloud-pubsub/)
 
+..
+__ gcloud pubsub
+
+gcloud beta pubsub subscriptions create pdf-conv-sub --topic new-doc --push-endpoint=$SERVICE_URL --push-auth-service-account=pubsub-cloud-run-invoker@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com
+
+    - Create a Pub/Sub subscription that invokes a HTTP endpoint whenever a message is publised on the topic "new-doc"
+
+
+gcloud pubsub topics create new-lab-report
+
+    - Create a new pubsub topic named `new-lab-report`
 ..
 
 
@@ -2518,7 +3263,6 @@ __ Windows in Stream Processing
 
 - Terms & Abbreviations:
     - DTS: Datetime Stamp
-
 ..
 
 
@@ -2536,7 +3280,6 @@ __
           use a PTransform to update the DTS in the message's metadata
           (which is used for windowing) to use the original event
           timestamp
-
 ..
 __ Types of Windows
 
@@ -4746,6 +5489,16 @@ __ Python
 
 - Faust: Getting Started with Stream Processing
     - https://acm.skillport.com/skillportfe/main.action#summary/COURSES/CDE$110302:_ss_cca:it_pyspwfdj_01_enus
+
+..
+
+__ Apache Flink
+
+- https://flink.apache.org/training.html
+- https://data-flair.training/blogs/flink-tutorials-home/
+
+- Introduction to Stateful Stream Processing with Apache Flink
+    - https://www.youtube.com/watch?v=DkNeyCW-eH0
 
 ..
 
