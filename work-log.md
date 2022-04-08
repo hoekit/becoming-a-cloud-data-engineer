@@ -1,6 +1,39 @@
 # Work Log
 <small>A chronological log of the things I'm doing to get to my goal of becoming a Cloud Data Engineer.</small>
 
+----
+**Fri, 08 Apr 2022**
+__
+
+- Continued questing in ChaiyoGCP!. [web](https://events.withgoogle.com/chaiyogcp-challenge/home-english/#content) | [badges](https://www.cloudskillsboost.google/public_profiles/70c3e8fe-77a0-45d9-a627-fa64f50ddafa)
+    - Earned two skill badges
+    - <img src="img/notes-quest-serverless-cloud-run-development.png" alt="" width="30%"/>  <img src="img/notes-quest-setup-and-configure-a-cloud-env-in-google-cloud.png" alt="" width="30%"/>
+    - Completed Activities today
+        - Measuring and Improving Speech Accuracy
+        - Set Up and Configure a Cloud Environment in Google Cloud: Challenge Lab
+        - Cloud Monitoring: Qwik Start
+        - Multiple VPC Networks
+        - Cloud IAM: Qwik Start
+        - Serverless Cloud Run Development: Challenge Lab
+        - Creating PDFs with Go and Cloud Run
+
+- Just two more days to go. Let's see if I can finish up a few more quests.
+..
+
+----
+**Thu, 07 Apr 2022**
+__
+
+- Continued questing in ChaiyoGCP!. [web](https://events.withgoogle.com/chaiyogcp-challenge/home-english/#content)
+    - Earned one completion badge:
+    - <img src="img/notes-quest-google-cloud-run-serverless-workshop.png" alt="" width="30%"/>
+    - Completed Activities today
+        - Developing a REST API with Go and Cloud Run
+        - Build a Resilient, Asynchronous System with Cloud Run and Pub/Sub
+        - Importing Data to a Firestore Database
+        - Build a Serverless App with Cloud Run that Creates PDF Files
+..
+
 
 ----
 **Wed, 06 Apr 2022**
