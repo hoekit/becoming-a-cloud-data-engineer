@@ -11,456 +11,74 @@ __
 
 
 ----
-### Challenge Lab: Set Up and Configure a Cloud Environment in Google Cloud
-__ Setup
+### Firebase Web
+__ Add Firebase SDK: npm
 
-- team name: griffin
-- region: us-east1
-- zone: us-east1-b
-- compute: n1-standard-1
+npm install firebase
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBTcvPbOGcRjNNFgoLb-atLzAhWSQKRUes",
+  authDomain: "qwiklabs-gcp-04-baa9a18ae125.firebaseapp.com",
+  projectId: "qwiklabs-gcp-04-baa9a18ae125",
+  storageBucket: "qwiklabs-gcp-04-baa9a18ae125.appspot.com",
+  messagingSenderId: "304827617045",
+  appId: "1:304827617045:web:c4d919b5877b6a099a631c",
+  measurementId: "G-NF5S38Q158"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 ..
-__ Task 1: Create development VPC manually
+__ Add Firebase SDK: script tag
 
-- VPC name: griffin-dev-vpc
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
-- Subnet name: griffin-dev-wp
-    Range: 192.168.16.0/20
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyBTcvPbOGcRjNNFgoLb-atLzAhWSQKRUes",
+    authDomain: "qwiklabs-gcp-04-baa9a18ae125.firebaseapp.com",
+    projectId: "qwiklabs-gcp-04-baa9a18ae125",
+    storageBucket: "qwiklabs-gcp-04-baa9a18ae125.appspot.com",
+    messagingSenderId: "304827617045",
+    appId: "1:304827617045:web:c4d919b5877b6a099a631c",
+    measurementId: "G-NF5S38Q158"
+  };
 
-- Subnet: griffin-dev-mgmt
-    Range: 192.168.32.0/20
-
-gcloud compute networks create griffin-dev-vpc --subnet-mode=custom
-
-gcloud compute networks subnets create griffin-dev-wp --network=griffin-dev-vpc --region=us-east1 --range=192.168.16.0/20
-
-gcloud compute networks subnets create griffin-dev-mgmt --network=griffin-dev-vpc --region=us-east1 --range=192.168.32.0/20
-
-# Check what ports WordPress needs opened: tcp:80?
-gcloud compute firewall-rules create griffin-dev-vpc-allow-icmp-ssh --direction=INGRESS --priority=1000 --network=griffin-dev-vpc --action=ALLOW --rules=icmp,tcp:22,tcp:80 --source-ranges=0.0.0.0/0
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
 ..
-__ Task 2: Create production VPC manually
+__ Install Firebase CLI
 
-- VPC Name: griffin-prod-vpc
+npm install -g firebase-tools
 
-- Subnet: griffin-prod-wp
-    Range: 192.168.48.0/20
-
-- Subnet: griffin-prod-mgmt
-    Range: 192.168.64.0/20
-
-gcloud compute networks create griffin-prod-vpc --subnet-mode=custom
-
-gcloud compute networks subnets create griffin-prod-wp --network=griffin-prod-vpc --region=us-east1 --range=192.168.48.0/20
-
-gcloud compute networks subnets create griffin-prod-mgmt --network=griffin-prod-vpc --region=us-east1 --range=192.168.64.0/20
-
-# Check what ports WordPress needs opened: tcp:80?
-gcloud compute firewall-rules create griffin-prod-vpc-allow-icmp-ssh --direction=INGRESS --priority=1000 --network=griffin-prod-vpc --action=ALLOW --rules=icmp,tcp:22,tcp:80 --source-ranges=0.0.0.0/0
+See: https://firebase.google.com/docs/cli/?authuser=0&hl=en
 ..
-__ Task 3: Create bastion host
+__ Deploy to Firebase Hosting
 
-- Create new VM Instance
+firebase login
 
-- Name: griffin-vm-bastion
-- machine-type: n1-standard-2
-    - Need 2 vCPU to connect to 2 NICs
-    - See: https://cloud.google.com/vpc/docs/create-use-multiple-interfaces#max-interfaces
-- Network Interface 0
-    - Network: griffin-dev-vpc
-    - Subnetworkk: griffin-dev-mgmt
+firebase init
 
-- Network Interface 2
-    - Network: griffin-prod-vpc
-    - Subnetworkk: griffin-prod-mgmt
+firebase deploy
 ..
-__ Task 4: Create and configure Cloud SQL Instance
-
-- MySQL Cloud SQL Instance
-    - Name: griffin-dev-db
-    - Region: us-east1
-    - Takes over five (5) minutes
-
-gcloud sql connect griffin-dev-db --user=root
-
-CREATE DATABASE wordpress;
-GRANT ALL PRIVILEGES ON wordpress.* TO "wp_user"@"%" IDENTIFIED BY "stormwind_rules";
-FLUSH PRIVILEGES;
-..
-__ Task 5: Create Kubernetes cluster
-
-- Kubernetes Cluster
-    - name: griffin-dev
-    - 2-node (n1-standard-4)
-    - subnet: griffin-dev-wp
-    - zone: us-east1-b
-    - See: https://cloud.google.com/sdk/gcloud/reference/container/clusters/create
-
-gcloud container clusters create griffin-dev --num-nodes=2 --machine-type=n1-standard-4 --subnetwork=griffin-dev-wp --network=griffin-dev-vpc --zone=us-east1-b
-..
-__ Task 6: Prepare the Kubernetes cluster
-
-gsutil -m cp -r gs://cloud-training/gsp321/wp-k8s .
-
-- Need to setup secrets and volume via `wp-env.yaml`
-
-vim wp-env.yaml
-    - Configure:
-        - username: wp_user
-        - password: stormwind_rules
-
-gcloud container clusters get-credentials griffin-dev --zone=us-east1
-
-kubectl create -f wp-env.yaml
-
-    - Create the secret and volume
-    - See: https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#-em-secret-em-
-    - # Or below. Most likely above if wp-env.yaml includes storage
-    - # kubectl create secret generic wp-env --from-file wp-env.yaml
-    - See: https://kubernetes.io/docs/reference/kubectl/cheatsheet/#creating-objects
-
-export GOOGLE_CLOUD_PROJECT=$(gcloud config get-value project)
-gcloud iam service-accounts keys create key.json --iam-account=cloud-sql-proxy@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com
-
-    - Create keys for a service account
-    - See: https://cloud.google.com/sdk/gcloud/reference/iam/service-accounts/keys
-
-kubectl create secret generic cloudsql-instance-credentials --from-file key.json
-
-    - Include created keys as secrets
-..
-__ Task 7: Create a WordPress deployment
-
-vim wp-deployment.yaml
-    - Replace YOUR_SQL_INSTANCE with griffin-dev-db's Instance connection name
-    - Get the Instance connection name from the Cloud SQL instance.
-
-kubectl apply -f wp-deployment.yaml
-kubectl deployments
-kubectl pods
-
-kubectl apply -f wp-service.yaml
-# External IP: 34.139.69.109
-..
-__ Task 8: Enable monitoring
-
-- See: https://cloud.google.com/monitoring/uptime-checks/
-- See: https://www.cloudskillsboost.google/focuses/10599?parent=catalog
-- https://cloud.google.com/monitoring/api/resources#tag_uptime_url
-
-- Nav > Monitoring > Uptime checks > Create Uptime Check
-    - Title: WordPress Uptime Check
-    - Protocol: HTTP
-    - Resource Type: ??
-    - Applies to: GKE Service
-    - Check Frequency: 1 min
-..
-__ Task 9: Provide access for an additional engineer
-
-- Grant `editor` role to the project
-..
-
-__ File: wp-env.yaml
-
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: wordpress-volumeclaim
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 200Gi
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: database
-type: Opaque
-stringData:
-  username: wp_user
-  password: stormwind_rules
-..
-__ File: wp-deployment.yaml
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: wordpress
-  labels:
-    app: wordpress
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: wordpress
-  template:
-    metadata:
-      labels:
-        app: wordpress
-    spec:
-      containers:
-        - image: wordpress
-          name: wordpress
-          env:
-          - name: WORDPRESS_DB_HOST
-            value: 127.0.0.1:3306
-          - name: WORDPRESS_DB_USER
-            valueFrom:
-              secretKeyRef:
-                name: database
-                key: username
-          - name: WORDPRESS_DB_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: database
-                key: password
-          ports:
-            - containerPort: 80
-              name: wordpress
-          volumeMounts:
-            - name: wordpress-persistent-storage
-              mountPath: /var/www/html
-        - name: cloudsql-proxy
-          image: gcr.io/cloudsql-docker/gce-proxy:1.11
-          command: ["/cloud_sql_proxy",
-                    "-instances=qwiklabs-gcp-01-57a76a321cf4:us-east1:griffin-dev-db=tcp:3306",
-                    "-credential_file=/secrets/cloudsql/key.json"]
-          securityContext:
-            runAsUser: 2  # non-root user
-            allowPrivilegeEscalation: false
-          volumeMounts:
-            - name: cloudsql-instance-credentials
-              mountPath: /secrets/cloudsql
-              readOnly: true
-      volumes:
-        - name: wordpress-persistent-storage
-          persistentVolumeClaim:
-            claimName: wordpress-volumeclaim
-        - name: cloudsql-instance-credentials
-          secret:
-            secretName: cloudsql-instance-credentials
-..
-__ File: wp-service.yaml
-
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: wordpress
-  name: wordpress
-spec:
-  type: LoadBalancer
-  ports:
-    - port: 80
-      targetPort: 80
-      protocol: TCP
-  selector:
-    app: wordpress
-..
-
-----
-### Challenge Lab: Serverless Cloud Run Development 
-__ Setup
-
-gcloud config set project $(gcloud projects list --format='value(PROJECT_ID)' --filter='qwiklabs-gcp')
-
-    - Set default project
-
-
-gcloud config set run/region us-central1
-
-    - Set region
-
-
-gcloud config set run/platform managed
-
-    - Set Cloud Run platform type
-
-
-git clone https://github.com/rosera/pet-theory.git && cd pet-theory/lab07
-
-    - Clone repo
-..
-__ Task 1: Enable a Public Service
-
-```
-    FIELD                   VALUE
-    --------                -----------
-    Billing Image           billing-staging-api:0.1
-    Billing Service         public-billing-service-937
-    Authentication          unauthenticated
-    Code                    pet-theory/lab07/unit-api-billing
-```
-
-cd ~/pet-theory/lab07/unit-api-billing
-
-GOOGLE_CLOUD_PROJECT=$(gcloud info --format='value(config.project)')
-
-gcloud builds submit --tag gcr.io/$GOOGLE_CLOUD_PROJECT/billing-staging-api:0.1
-
-BILL_STG_SVC=public-billing-service-937
-
-gcloud run deploy $BILL_STG_SVC --image gcr.io/$GOOGLE_CLOUD_PROJECT/billing-staging-api:0.1 --max-instances=1
-
-BILL_STG_URL=$(gcloud run services describe $BILL_STG_SVC --format "value(status.url)")
-
-curl -X GET $BILL_STG_URL
-..
-__ Task 2: Deploy a Frontend Service
-
-
-```
-    FIELD                   VALUE
-    --------                -----------
-    Image Name              frontend-staging:0.1
-    Service Name            frontend-staging-service-735
-    Authentication          unauthenticated
-    Code                    pet-theory/lab07/staging-frontend-billing
-```
-
-cd ~/pet-theory/lab07/staging-frontend-billing
-
-gcloud builds submit --tag gcr.io/$GOOGLE_CLOUD_PROJECT/frontend-staging:0.1
-
-FE_STG_SVC=frontend-staging-service-735
-
-gcloud run deploy $FE_STG_SVC --image gcr.io/$GOOGLE_CLOUD_PROJECT/frontend-staging:0.1 --max-instances=1
-
-FE_STG_URL=$(gcloud run services describe $FE_STG_SVC --format "value(status.url)")
-
-curl -X GET $FE_STG_URL
-..
-__ Task 3: Deploy a Private Service
-
-First, delete the existing Billing Service using Cloud Console.
-
-
-```
-    FIELD                   VALUE
-    --------                -----------
-    Image Name              billing-staging-api:0.2
-    Service Name            private-billing-service-844
-    Repository              gcr.io
-    Authentication          authenticated
-    Code                    pet-theory/lab07/staging-api-billing
-```
-
-FOLDER=~/pet-theory/lab07/staging-api-billing
-cd $FOLDER
-
-GOOGLE_CLOUD_PROJECT=$(gcloud info --format='value(config.project)')
-IMAGE_NAME=billing-staging-api:0.2
-gcloud builds submit --tag gcr.io/$GOOGLE_CLOUD_PROJECT/$IMAGE_NAME
-
-SERVICE_NAME=private-billing-service-844
-gcloud run deploy $SERVICE_NAME --image gcr.io/$GOOGLE_CLOUD_PROJECT/$IMAGE_NAME --no-allow-unauthenticated --max-instances=1
-
-SERVICE_URL=$(gcloud run services describe $SERVICE_NAME --format "value(status.url)")
-
-curl -X get -H "Authorization: Bearer $(gcloud auth print-identity-token)" $SERVICE_URL
-
-BILLING_URL=$(gcloud run services describe $SERVICE_NAME --format "value(status.url)")
-
-curl -X get -H "Authorization: Bearer $(gcloud auth print-identity-token)" $BILLING_URL
-..
-__ Task 4: Create a Billing Service Account
-
-```
-FIELD                   VALUE
---------                -----------
-     SERVICE_ACCOUNT=billing-service-sa-512
-        DISPLAY_NAME='"Billing Service Cloud Run"'
-        SERVICE_NAME=billing-service
-                ROLE=''
-GOOGLE_CLOUD_PROJECT=$(gcloud info --format='value(config.project)')
-```
-
-gcloud iam service-accounts create $SERVICE_ACCOUNT --display-name=$DISPLAY_NAME
-
-# Not sure if step below is required. Probably not since Role is
-# undefined and the binding will likely not work
-# See: https://cloud.google.com/sdk/gcloud/reference/run/services/add-iam-policy-binding
-# gcloud run services add-iam-policy-binding $SERVICE_NAME --member=serviceAccount:$SERVICE_ACCOUNT@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com $ROLE
-..
-__ Task 5: Deploy the Billing Service
-
-```
-FIELD                   VALUE
---------                -----------
-          IMAGE_NAME=billing-prod-api:0.1
-        SERVICE_NAME=billing-prod-service-378
-      # Repository  =  gcr.io
-      AUTHENTICATION=--no-allow-unauthenticated
-          FOLDER='~/pet-theory/lab07/prod-api-billing'
-     SERVICE_ACCOUNT=billing-service-sa-512
-GOOGLE_CLOUD_PROJECT=$(gcloud info --format='value(config.project)')
-```
-
-cd $FOLDER
-
-gcloud builds submit --tag gcr.io/$GOOGLE_CLOUD_PROJECT/$IMAGE_NAME
-
-# See: https://cloud.google.com/sdk/gcloud/reference/run/deploy
-# The service account represents the identity of the running revision
-# Probably needed because that's the identity used to access the data backend
-gcloud run deploy $SERVICE_NAME --image gcr.io/$GOOGLE_CLOUD_PROJECT/$IMAGE_NAME $AUTHENTICATION --max-instances=1 --service-account=$SERVICE_ACCOUNT
-
-PROD_BILLING_URL=$(gcloud run services describe $SERVICE_NAME --format "value(status.url)")
-
-curl -X get -H "Authorization: Bearer $(gcloud auth print-identity-token)" $PROD_BILLING_URL
-..
-__ Task 6: Frontend Service Account
-
-```
-FIELD                   VALUE
---------                -----------
-     SERVICE_ACCOUNT=frontend-service-sa-851
-        DISPLAY_NAME='"Billing Service Cloud Run Invoker"'
-        SERVICE_NAME=frontend-prod-service
-                ROLE='--role=roles/run.invoker'
-GOOGLE_CLOUD_PROJECT=$(gcloud info --format='value(config.project)')
-```
-
-gcloud iam service-accounts create $SERVICE_ACCOUNT --display-name=$DISPLAY_NAME
-
-# See: https://cloud.google.com/sdk/gcloud/reference/run/services/add-iam-policy-binding
-# Here, we're binding the service account to the service and giving the
-# member i.e. Service account the run.invoker role
-gcloud run services add-iam-policy-binding $SERVICE_NAME --member=serviceAccount:$SERVICE_ACCOUNT@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com $ROLE
-
-See: https://cloud.google.com/sdk/gcloud/reference/run/services/add-iam-policy-binding
-..
-__ Task 7: Redeploy the Frontend Service
-
-```
-FIELD                   VALUE
---------                -----------
-          IMAGE_NAME=frontend-prod:0.1
-        SERVICE_NAME=frontend-prod-service-834
-      # Repository  =  gcr.io
-      AUTHENTICATION=''
-          FOLDER=pet-theory/lab07/prod-frontend-billing
-     SERVICE_ACCOUNT=frontend-service-sa-851
-GOOGLE_CLOUD_PROJECT=$(gcloud info --format='value(config.project)')
-```
-
-cd $FOLDER
-
-gcloud builds submit --tag gcr.io/$GOOGLE_CLOUD_PROJECT/$IMAGE_NAME
-
-gcloud run deploy $SERVICE_NAME --image gcr.io/$GOOGLE_CLOUD_PROJECT/$IMAGE_NAME $AUTHENTICATION --max-instances=1 --service-account=$SERVICE_ACCOUNT
-
-# This moved from Task 6 here:
-gcloud run services add-iam-policy-binding $SERVICE_NAME --member=serviceAccount:$SERVICE_ACCOUNT@$GOOGLE_CLOUD_PROJECT.iam.gserviceaccount.com $ROLE
-
-SERVICE_URL=$(gcloud run services describe $SERVICE_NAME --format "value(status.url)")
-
-curl -X get -H "Authorization: Bearer $(gcloud auth print-identity-token)" $SERVICE_URL
-
-PROD_FRONTEND_URL=$(gcloud run services describe $SERVICE_NAME --format "value(status.url)")
-
-curl -X get -H "Authorization: Bearer $(gcloud auth print-identity-token)" $PROD_FRONTEND_URL
+__ Web: https://qwiklabs-gcp-04-baa9a18ae125.web.app/
 ..
 
 
@@ -3712,11 +3330,42 @@ __ Naming
     - Dataset ID e.g. Marketing
     - Table Name e.g. Campaign
 ..
+__ Concepts
+
+- Arrays: Vertically compresses several rows into a single field
+- Struct: Horizonally compresses several fields into a single field
+- Arrays of Struct: Compresses a table into a single field
+
+..
 __ Links
 
 - bq CLI [gcp](https://cloud.google.com/bigquery/docs/reference/bq-cli-reference)
 - Standard SQL [gcp](https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax)
 - Interactive SQL translator for Teradata SQL [gcp](https://cloud.google.com/bigquery/docs/interactive-sql-translator)
+..
+__ Arrays
+
+- finding the number of elements with ARRAY_LENGTH(<array>)
+- deduplicating elements with ARRAY_AGG(DISTINCT <field>)
+- ordering elements with ARRAY_AGG(<field> ORDER BY <field>)
+- limiting ARRAY_AGG(<field> LIMIT 5)
+..
+__ Example Query:
+
+# Deduplicate the pages and products so you can see how many unique
+# products were viewed by adding DISTINCT to ARRAY_AGG()
+
+SELECT
+  fullVisitorId,
+  date,
+  ARRAY_AGG(DISTINCT v2ProductName) AS products_viewed,
+  ARRAY_LENGTH(ARRAY_AGG(DISTINCT v2ProductName)) AS distinct_products_viewed,
+  ARRAY_AGG(DISTINCT pageTitle) AS pages_viewed,
+  ARRAY_LENGTH(ARRAY_AGG(DISTINCT pageTitle)) AS distinct_pages_viewed
+  FROM `data-to-insights.ecommerce.all_sessions`
+WHERE visitId = 1501570398
+GROUP BY fullVisitorId, date
+ORDER BY date
 ..
 
 ----
