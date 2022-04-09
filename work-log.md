@@ -1,6 +1,35 @@
 # Work Log
 <small>A chronological log of the things I'm doing to get to my goal of becoming a Cloud Data Engineer.</small>
 
+
+----
+**Sat, 09 Apr 2022**
+__
+- Continued questing in ChaiyoGCP!. [web](https://events.withgoogle.com/chaiyogcp-challenge/home-english/#content) | [badges](https://www.cloudskillsboost.google/public_profiles/70c3e8fe-77a0-45d9-a627-fa64f50ddafa)
+    - Earned two skill badges:
+        - <img src="img/notes-quest-build-a-website-on-google-cloud.png" alt="" width="30%"/> <img src="img/notes-quest-build-and-optimize-data-warehouses-with-bigquery.png" alt="" width="30%"/>
+    - Earned two completion badges:
+        - <img src="img/notes-quest-deploying-applications.png" alt="" width="30%"/> <img src="img/notes-quest-language-speech-text-translation-with-google-cloud-apis.png" alt="" width="30%"/>
+    - Completed the following labs today (in reverse chrono order):
+        - Build a Website on Google Cloud: Challenge Lab
+        - Migrating a Monolithic Website to Microservices on Google Kubernetes Engine
+        - Deploy, Scale, and Update Your Website on Google Kubernetes Engine
+        - Hosting a Web App on Google Cloud Using Compute Engine
+        - Deploy Your Website on Cloud Run
+        - It Speaks! Create Synthetic Speech Using Text-to-Speech
+        - Entity and Sentiment Analysis with the Natural Language API
+        - Firebase Web
+        - Classify Text into Categories with the Natural Language API
+        - Build and Optimize Data Warehouses with BigQuery: Challenge Lab
+        - Working with JSON, Arrays, and Structs in BigQuery
+        - Troubleshooting and Solving Data Join Pitfalls
+        - Creating Date-Partitioned Tables in BigQuery
+        - Creating a Data Warehouse Through Joins and Unions
+
+- I'm taking a break from Quests. Enough for now.
+..
+
+
 ----
 **Fri, 08 Apr 2022**
 __
