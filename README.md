@@ -11,5 +11,11 @@ Current goal: Reskill. Get certified as a Google Cloud Engineer.
 - [`Notes`](notes.md)
     - Notes and findings along the way
 
+- [`Design`](design.md)
+    - Design Tips and Techniques
+
+- [`Techniques`](techniques.md)
+    - Data Techniques
+
 - [`TODO`](todo.md)
     - A list of things to do that'll enhance the journey
