@@ -3,8 +3,22 @@
 
 
 ----
+**Mon, 11 Apr 2022**
+__
+
+- Continued course [Building Resilient Streaming Analytics Systems on Google Cloud](https://www.cloudskillsboost.google/course_templates/52)
+    - Covered Google BigTable, for high-throughput low-latency processing
+    - Covered Google BigQuery
+        - GIS Functions
+        - Briefly touched on analytic window functions like LEAD(), RANK()
+        - Optimization techniques
+..
+
+
+----
 **Sat, 09 Apr 2022**
 __
+
 - Continued questing in ChaiyoGCP!. [web](https://events.withgoogle.com/chaiyogcp-challenge/home-english/#content) | [badges](https://www.cloudskillsboost.google/public_profiles/70c3e8fe-77a0-45d9-a627-fa64f50ddafa)
     - Earned two skill badges:
         - <img src="img/notes-quest-build-a-website-on-google-cloud.png" alt="" width="30%"/> <img src="img/notes-quest-build-and-optimize-data-warehouses-with-bigquery.png" alt="" width="30%"/>
