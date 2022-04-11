@@ -11,6 +11,14 @@ __
 
 
 ----
+### HDD vs SSD
+__
+
+- Read performance of SSD is 10-20x faster than HDD
+..
+
+
+----
 ### Firebase Web
 __ Add Firebase SDK: npm
 
@@ -5163,5 +5171,35 @@ Notions of:
 
 - A Graph Database
     - Could be useful for dependency graphs
+..
+
+
+----
+### Thailand Data Sources
+__
+
+- https://www.dataforthai.com
+..
+
+----
+### Other Data Sources
+__
+
+- NYPD Motor Vehicle Collisions Dataset
+    - https://data.cityofnewyork.us/Public-Safety/NYPD-Motor-Vehicle-Collisions/h9gi-nx95
+
+- Twitter API
+    - https://developer.twitter.com/en/docs/twitter-api/getting-started/getting-access-to-the-twitter-api
+
+- London Datastore:
+    - https://data.london.gov.uk/dataset/
+    - Reports/Dashboards are driven by Tableau
+        - https://www.met.police.uk/sd/stats-and-data/met/stop-and-search-dashboard/
+        - https://data.london.gov.uk/dataset/mps-stop-and-search-public-dashboard-data
+
+- See also:
+    - https://careerfoundry.com/en/blog/data-analytics/where-to-find-free-datasets/
+    - https://careerfoundry.com/en/blog/data-analytics/data-analyst-portfolio/
+        - Something similar but for data-engineering
 ..
 
