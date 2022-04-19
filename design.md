@@ -1,5 +1,38 @@
 # Design Tips and Techniques
 
+----
+### BigQuery Query Optimization
+__
+
+See: https://www.cloudskillsboost.google/course_sessions/925205/labs/115126
+
+- Minimize I/O
+    - BigQuery is columnar
+        - exclude unneeded columns in SELECT
+        - SELECT * EXCEPT may be faster
+
+- Cache intermediate results
+
+- Use BI Engine to cache data in memory
+    - Useful in conjunction with Dashboards like Data Studio
+
+- Avoid inefficient JOINS
+    - Denormalize
+    - Avoid self-joins to large tables
+    - Reduce data being joined if self-join is unavoidable
+    - Use window functions like LAG() and LEAD() to match previous and
+      next rows.
+    - Precompute expensive, recurring computations
+
+- Avoid overwhelming a worker
+    - Distribute large sorts
+    - Distribute skewed GROUP BYs
+
+- Use Approximate aggregation functions
+    - Use APPROX_COUNT_DISTINCT, APPROX_QUANTILES, APPROX_TOP_COuNT,
+      APPROX_TOP_SUM if errors around 1% is tolerable
+..
+
 
 ----
 ### Designing keys in a key-value store
