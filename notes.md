@@ -11,6 +11,319 @@ __
 
 
 ----
+### Apache Flink
+__ Tutorial: Processing Kafka Sources and Sinks with Apache Flink in Python
+
+- https://thecodinginterface.com/blog/kafka-source-sink-with-apache-flink-table-api/
+..
+__ Flink Deep Dive - Concepts and Real Examples
+
+- https://www.youtube.com/watch?v=_8fHV5woDtQ
+..
+
+
+----
+### Keeping Up To Date
+__
+
+- How to get Latest Data Engineering News, 2021
+    - https://www.youtube.com/watch?v=MIWHNlJfR-E
+..
+
+
+----
+### Data Ingestion
+__ Twitter architecture
+
+- Events/data > Load Balancer > Endpoint > Kafka
+- <img src="img/notes-data-ingestion-twitter-2015.png" alt="" width="80%"/>
+
+- https://engineering.grab.com/real-time-data-ingestion
+
+..
+__ Data collection tools:
+
+- Facebook Scribe
+- Apache Flume
+- syslog-ng
+..
+__ Data ingestion issues
+
+- network partition
+    - Creates duplicates
+..
+__ Data Model
+
+- raw data as atomic facts
+
+- include timestamps
+
+- use nonces to make each fact identifiable to identify duplicates
+..
+__ Data Serialization Formats:
+
+- Apache Thrift
+- Apache Avro
+- Google Protobufs
+..
+__ Distributed Filesystems
+
+- HDFS - Hadoop Distributed File System
+    - Each file should be 64MB minimum
+    - Every file, directory and block in HDFS occupies 150 bytes in
+      namenode memory
+    - 1 million files ~ 3GB memory
+    - It's a master/slave configuration
+        - Spark, Storm are also Master/Slave
+
+- S3 - Also a distributed filesystem
+
+- Partition to improve performance e.g. partition by day
+
+..
+
+
+----
+### Apache Hadoop
+__
+
+- Version 2.x and 3.x are similar
+
+- Hadoop
+    - Has five (5) Java background processes running
+    - JP1, JP2, JP3 : For HDFS
+    - JP4, JP5      : For MapReduce
+
+- Hadoop Default Block Size
+    - v1  :  64 MB
+    - v2+ : 128 MB
+
+- Hadoop Built-in Replication
+    - Default is 3 replicas (1 actual + 2 copies)
+        - copies = replicas - 1
+    - Can increase or decrease
+
+- Master/Slave Processes
+    - Master: JP1
+    - Slave : JP2
+
+- Developers connect to an edge node that connects to the Hadoop cluster
+    - The edge node stores source files pushed to the HDFS
+
+- On the Master: Create file metadata
+    - Divide up 1GB to N blocks depending on block size
+    - Apply Replication Factor
+    - Placement/Allocate each replica
+    - Metadata is stored locally in Master filesystem
+    - Metadata sent as response to client
+
+- On the Requesting Slave
+    - Receives allocation
+    - Creates a pipeline which does the following:
+        - Creates the blocks
+        - Then sequentially traverse to the other nodes
+        - At each node, copy replicas destined for that node
+
+- Master/Slave Heartbeat:
+    - Every 3 seconds
+
+- Failure modes:
+    - Network failures
+    - Software failures
+    - Hardware failure
+
+- Hadoop Automatic Failover
+    - Case: hardware failure (permanent)
+        - When a node fails, Hadoop will recreate replicas in nodes that are
+          still up and running
+        - Metadata is updated
+    - Case: network of software failure
+        - Once heartbeat is reestablished
+        - Replicas that are copied over are like orphans because Master
+          does not know orphaned replicas
+        - Solution: Force Slave temporary outage to become permanent
+            - Drop the Slave
+            - Bring up the new slave
+
+- Hadoop v1
+    - Master does not have HA
+    - Master  node: NameNode + JobTracker
+    - Slave   node: DataNode + TaskTracker
+    - Checkpt node: SecondaryNameNode
+
+- Hadoop v2
+    - Master  node: NameNode + ResourceManager
+    - Slave   node: DataNode + NodeManager
+    - Checkpt node: SecondaryNameNode
+    - Standby node: PassiveNameNode + PassiveResourceManager
+
+- Hadoop v2+
+    - Master has HA for Master Node
+    - JP1 - Name node
+    - JP2 - Data node
+    - JP3 - Secondary name node (Not a secondary master)
+    - JP4 - Job tracker (v1)  / Resource Manager (v2)
+    - JP5 - Task tracker (v1) / Node Manager (v2)
+
+- Hadoop Multi-master in v2+
+    - https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-hdfs/HDFSHighAvailabilityWithQJM.html
+    - One (1) Active Name Node
+    - N Passive Name Nodes
+    - Only one active name node at any one time
+    - Where is metadata stored?
+        - Metadata is stored in a Journal Node which is a separate Node
+        - Journal Nodes can be multi-node
+    - Zookeeper handles the master management
+        - Zookeeper itself is Leader-Follower topology
+        - Minimum 3 nodes
+
+- Hadoop Distributed File System (HDFS), 2021
+    - https://www.youtube.com/watch?v=N6TmDNexxGI
+
+..
+
+
+----
+### Apache Cassandra
+__
+
+- A Distributed Database
+- A Peer-to-peer topology
+    - Compared to HDFS which is Master/Slave topology
+..
+
+----
+### Apache Hive
+__
+
+- Apache Hive Introduction & Architecture
+    - https://www.youtube.com/watch?v=taTfW2kXSoE
+
+- Use Apache Hive tables for partitioning
+    - Hive was invented by Facebook
+    - It's a SQL layer over over the MapReduce query engine
+    - MapReduce runs on HDFS
+
+- Apache Spark
+    - Is a query engine (at the same level of abstraction as MapReduce)
+    - Spark runs on HDFS
+    - Hive can also use Spark as it's query engine instead of HDFS
+
+- Hive metadata can be embedded within the server or in a remote RDBMS
+    - Remote RDBMS like Oracle, DB2, MySQL
+    - The embedded database is called Derby
+    - Derby is local to a Hive node
+    - In practice, a remote RDBMS is used so that the metadata can be
+      shared between hive nodes
+
+- Hive can be used with MR | Tez | Spark
+    - Hive metadata can be embedded or remote
+
+..
+
+
+----
+### Big Data Architectures
+__
+
+- In-Stream Big Data Processing, 2013
+    - https://highlyscalable.wordpress.com/2013/08/20/in-stream-big-data-processing/
+    - Streaming processing
+
+- Data Engineering at Booking.com Case Study
+..
+__ Using Flink in GovChat
+
+- Flink Deep Dive - Concepts and Real Examples
+    - https://www.youtube.com/watch?v=_8fHV5woDtQ
+
+- Ingestion
+    - AWS Lambda
+    - AWS Kinesis
+
+- Streaming
+    - Flink
+
+- Sentiment Analysis
+    - AWS Comprehend
+
+- Visualization
+    - InfluxDB
+    - Grafana
+
+..
+__ Links
+
+- GovChat
+    - https://www.govchat.org/
+
+- CNCF Landscape
+    - https://landscape.cncf.io/?fullscreen=yes
+
+- NATS
+    - https://nats.io/
+    - https://docs.nats.io/reference/faq
+
+- Amazon DynamoDB (NoSQL Key-value Store)
+    - https://aws.amazon.com/dynamodb/
+
+- InfluxDB (Time-series DB)
+    - https://www.influxdata.com/
+
+- Grafana (Observability)
+    - https://grafana.com/
+..
+
+
+----
+### Apache Druid
+__
+
+- Introduction to Druid, 2019
+    - https://towardsdatascience.com/introduction-to-druid-4bf285b92b5a
+
+..
+
+
+----
+### Big Data Lambda Architecture
+__
+
+
+..
+
+
+----
+### Stream Processing
+__
+
+- Assuring Data Quality at Scale by Gayathri Thiyagarajan
+    - https://www.youtube.com/watch?v=l0FHmVJTZUQ&t=63s
+
+- In-Stream Processing Architecture
+    - https://blog.griddynamics.com/what-is-in-stream-processing/
+
+- Big Data Lambda Architecture
+    - https://www.databasetube.com/database/big-data-lambda-architecture/
+
+- Questioning the Lambda Architecture, 2014
+    - http://radar.oreilly.com/2014/07/questioning-the-lambda-architecture.html
+
+..
+
+----
+### Pandas Resources
+__
+
+- 10 Minute Getting Started Guide:
+    - https://pandas.pydata.org/pandas-docs/stable/user_guide/10min.html
+
+- Pandas Cookbook
+    - https://pandas.pydata.org/pandas-docs/stable/user_guide/cookbook.html#cookbook
+..
+
+
+----
 ### HDD vs SSD
 __
 
@@ -725,7 +1038,7 @@ __ Task 1: Clean your training data
         - longitude is reasonable                   -- FIXME NOT NULL??
             - Need to look at the values
         - passenger_count > Number                  -- FIXME
-        - sampling 1 million rows from > 1Billion   -- FIXME
+        - smmpling 1 million rows from > 1Billion   -- FIXME
 
     ```
 
@@ -3459,6 +3772,8 @@ __
 
 - Snowflake Security: Security Your Snowflake Data Cloud, 2021 [web](https://orange.hosting.lsoft.com/trk/click?ref=znwrbbrs9_6-2e46bx332778x036174&)
 
+- Big Data: Principles and Best Practices of Scalable Realtime Data Systems
+    - https://acm.skillport.com/skillportfe/main.action#summary/BOOKS/RW$277468:_ss_book:147297
 ..
 
 
@@ -5202,4 +5517,80 @@ __
     - https://careerfoundry.com/en/blog/data-analytics/data-analyst-portfolio/
         - Something similar but for data-engineering
 ..
+
+
+----
+### Data Engineering Blogs & Videos
+__
+
+- https://cloud.google.com/blog/products/data-analytics/building-the-data-engineering-driven-organization
+
+- Google Data Data Cloud Summit 2022
+    - https://cloudonair.withgoogle.com/events/summit-data-cloud-2022
+
+- Google Cloud Blog
+    - https://cloudblog.withgoogle.com/rss/
+
+- Cloudera Data Engineering Blog
+    - https://blog.cloudera.com/product/data-engineering/
+
+- Snowflake Blog
+    - https://www.snowflake.com/blog/
+
+- Data Engineering on Towards Data Science
+    - https://medium.com/towards-data-science/search?q=data%20engineering
+
+- AWS Big Data Blog
+    - https://aws.amazon.com/blogs/big-data/
+
+- Google Developers Blog
+    - https://developers.googleblog.com/
+
+- Linkedin Engineering / Distributed Systems
+    - https://engineering.linkedin.com/blog/topic/distributed-systems
+
+- Grab Engineering
+    - https://engineering.grab.com/
+..
+
+
+----
+### Exam Prep / Technical Interview Questions
+__
+
+- Google Professional Data Engineer > Sample Questions
+    - https://cloud.google.com/certification/data-engineer
+
+- https://www.interviewquery.com/blog-google-data-engineer-interview-questions/
+..
+
+
+----
+### Use Cases
+__
+
+- Twitter: Five billion sessions a day, 2015
+    - Good high-level explanation of the architecture
+    - Decoupled components, asynchronous communication, graceful service degradation
+    - https://blog.twitter.com/engineering/en_us/a/2015/handling-five-billion-sessions-a-day-in-real-time
+
+- Designing Uber
+    - http://highscalability.com/blog/2022/1/25/designing-uber.html
+
+- Designing Tinder
+    - http://highscalability.com/blog/2022/1/17/designing-tinder.html
+
+- Designing Instagram
+    - http://highscalability.com/blog/2022/1/11/designing-instagram.html
+
+- Designing WhatsApp
+    - http://highscalability.com/blog/2022/1/3/designing-whatsapp.html
+
+- Designing Netflix
+    - http://highscalability.com/blog/2021/12/13/designing-netflix.html
+
+- http://highscalability.com/all-time-favorites/
+..
+
+
 
