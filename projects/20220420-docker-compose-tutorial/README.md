@@ -3,6 +3,7 @@
 
 ----
 ### Docker Compose Tutorial
+
 __ Folders and files structure
 
 - $PROJECT
@@ -13,6 +14,7 @@ __ Folders and files structure
     - website/
     - docker-compose.yaml
 ..
+
 __ Docker build/run just the product/api.py service
 
 Build a docker image:
@@ -23,6 +25,7 @@ Run image and port map:
 
     docker run -p 5001:80 --name product-service product-api:0.1
 ..
+
 __ Clean Up
 
 Remove docker containers:
@@ -33,6 +36,7 @@ Remove docker image:
 
     docker rmi product-api:0.1
 ..
+
 __ Docker Compose
 
 Run the docker compose file:
@@ -49,6 +53,7 @@ Stop docker-compose services in the background:
 
     docker-compose stop
 ..
+
 __ Clean Up
 
 Remove containers:
@@ -78,6 +83,7 @@ __ Docker Compose Notes
 
 - The `depends_on` property of `services` is pretty neat
 ..
+
 __ Python Notes
 
 - Include a `requirements.txt` file

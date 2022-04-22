@@ -11,11 +11,13 @@ __ Scope
 - Consume a few events
 - Tear down
 ..
+
 __ Project Folders/Files Structure
 
 - $PROJECT
     - docker-compose.yaml
 ..
+
 __ Steps
 
 1. Create the docker-compose.yaml file with two containers
@@ -54,6 +56,7 @@ __ Steps
     - `docker-compose stop`
     - This will cause all data in kafka container to be deleted
 ..
+
 __ Next Steps
 
 How do we create a kafka container where the messages are retained?
@@ -92,6 +95,7 @@ How do we create a kafka container where the messages are retained?
     - docker volume inspect $VOLUME
         - See volume details
 ..
+
 __ Cleanup
 
 - Remove containers
@@ -103,6 +107,7 @@ __ Cleanup
 - Remove mapped folder
     - sudo rm -r /home/hoekit/tmp/kafka_data
 ..
+
 __ Links
 
 - Processing Kafka Sources and Sinks with Apache Flink in Python
