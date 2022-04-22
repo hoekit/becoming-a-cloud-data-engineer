@@ -1,6 +1,27 @@
 # Work Log
 <small>A chronological log of the things I'm doing to get to my goal of becoming a Cloud Data Engineer.</small>
 
+----
+**Fri, 22 Apr 2022**
+__
+
+- Created a mini project to run Apache Kafka in a docker compose
+  environment and logs are persisted across docker compose restarts
+    - See: [projects/20220422-kafka-docker-compose/README.md](projects/20220422-kafka-docker-compose/README.md)
+..
+
+
+----
+**Wed, 20 Apr 2022**
+__
+
+- Created a mini project to try out kafka:
+    - See: [projects/20220420-kafka-quickstart/README.md](projects/20220420-kafka-quickstart/README.md)
+
+- Create a mini project to try out docker compose:
+    - See: [projects/20220420-docker-compose-tutorial/README.md](projects/20220420-docker-compose-tutorial/README.md)
+..
+_
 
 ----
 **Mon, 11 Apr 2022**
