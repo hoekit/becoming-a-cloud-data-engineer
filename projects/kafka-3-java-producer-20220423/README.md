@@ -69,10 +69,10 @@ __ 2. Create a topic
 
 - Create a topic:
 
-    kafka-topics --create --topic output-topic \
-        --bootstrap-server broker:9092 \
-        --replication-factor 1 \
-        --partitions 1
+        kafka-topics --create --topic output-topic \
+            --bootstrap-server broker:9092 \
+            --replication-factor 1 \
+            --partitions 1
 ..
 __ Step Notes
 
@@ -80,23 +80,23 @@ __ Step Notes
 
 - So go into the broker service
 
-    docker-compose exec broker bash
+        docker-compose exec broker bash
 
 - Go to where the server.properties file for Kafka is found:
 
-    cd /etc/kafka
+        cd /etc/kafka
 
 - Add the property at the end cos vim doesn't work in the docker image:
 
-    cat >> server.properties
-    delete.topic.enable=true
-    # Press Ctrl-D to end
+        cat >> server.properties
+        delete.topic.enable=true
+        # Press Ctrl-D to end
 
-    cat server.properties       # Check that the line was added
+        cat server.properties       # Check that the line was added
 
 - Remove the topic:
 
-    kafka-topics --delete --topic output-topic --bootstrap-server broker:9092
+        kafka-topics --delete --topic output-topic --bootstrap-server broker:9092
 
 - Manually delete Apache Kafka topics, 2018
     - https://contactsunny.medium.com/manually-delete-apache-kafka-topics-424c7e016ff3
