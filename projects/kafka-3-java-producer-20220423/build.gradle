@@ -1,0 +1,96 @@
+/*
+ * This build script appears to be legacy (in Groovy)
+ * See: https://plugins.gradle.org/plugin/com.github.johnrengelman.shadow
+ */
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        // Generates Java code for Apache Avro
+        //   See: https://github.com/davidmc24/gradle-avro-plugin
+        classpath "com.commercehub.gradle.plugin:gradle-avro-plugin:0.22.0"
+
+        // Create fat/uber JARs with support for package relocation
+        // Creates an executable jar no matter the dependencies
+        //  See: https://github.com/johnrengelman/shadow
+        //  See: https://imperceptiblethoughts.com/shadow/
+        classpath "com.github.jengelman.gradle.plugins:shadow:6.1.0"
+    }
+}
+
+plugins {
+    id "java"
+
+    // Containerize your Java application
+    id "com.google.cloud.tools.jib" version "3.2.0"
+
+    // Generate files used by IntelliJ IDEA making it possible to open
+    // the project from IDEA
+    //  // See: https://docs.gradle.org/current/userguide/idea_plugin.html
+    // id "idea"
+
+    // Generate files used by Eclipse IDE, making it possible to import
+    // the project into Eclipse
+    // See: https://docs.gradle.org/current/userguide/eclipse_plugin.html
+    // id "eclipse"
+}
+
+// Tells Java what Java version the source code is
+// https://docs.gradle.org/current/userguide/building_java_projects.html#sec:java_cross_compilation
+sourceCompatibility = "1.8"
+
+// Generates bytecode that requires the minimum JVM version
+// https://docs.gradle.org/current/userguide/building_java_projects.html#sec:java_cross_compilation
+targetCompatibility = "1.8"
+
+version = "0.0.1"
+
+repositories {
+    mavenCentral()
+
+    maven {
+        url "https://packages.confluent.io/maven"
+    }
+}
+
+
+apply plugin: "com.commercehub.gradle.plugin.avro"
+apply plugin: "com.github.johnrengelman.shadow"
+
+
+dependencies {
+    implementation "org.apache.avro:avro:1.11.0"
+    implementation "org.slf4j:slf4j-simple:1.7.36"
+    implementation "org.apache.kafka:kafka-streams:2.8.1"
+    implementation "io.confluent:kafka-streams-avro-serde:6.2.1"
+    testImplementation "org.apache.kafka:kafka-streams-test-utils:2.8.1"
+    testImplementation "junit:junit:4.13.2"
+    testImplementation 'org.hamcrest:hamcrest:2.2'
+}
+
+
+test {
+    testLogging {
+        outputs.upToDateWhen { false }
+        showStandardStreams = true
+        exceptionFormat = "full"
+    }
+}
+
+
+jar {
+  manifest {
+    attributes(
+      "Class-Path": configurations.compileClasspath.collect { it.getName() }.join(" "),
+      "Main-Class": "com.firexis.KafkaProducerApp"
+    )
+  }
+}
+
+
+shadowJar {
+    archiveBaseName = "kafka-producer-application-standalone"
+    archiveClassifier = ''
+}
