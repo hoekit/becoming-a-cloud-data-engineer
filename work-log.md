@@ -2,6 +2,18 @@
 <small>A chronological log of the things I'm doing to get to my goal of becoming a Cloud Data Engineer.</small>
 
 ----
+**Sun, 24 Apr 2022**
+__
+
+- Did a mini crash course on gradle:
+    - See: [projects/gradle-1-hello-world-20220424/README.md](projects/gradle-1-hello-world-20220424/README.md)
+
+- The gradle knowledge was to supplement a mini-project to build a Kafka
+  Java producer. It ends with building a container for the producer:
+    - See: [projects/kafka-3-java-producer-20220423/README.md](projects/kafka-3-java-producer-20220423/README.md)
+..
+
+----
 **Fri, 22 Apr 2022**
 __
 
