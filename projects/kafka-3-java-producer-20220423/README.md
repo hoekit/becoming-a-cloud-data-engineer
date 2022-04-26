@@ -216,6 +216,7 @@ __ Create a DockerFile instead of using Google Jib
 - Build the docker image
     - `docker build -t kafka-producer:0.0.2`
         - Make sure the image matches that in the `docker-compose.yml` file
+    - The docker image size is about 125MB which is quite reasonable
 ..
 __ Other Changes
 
@@ -224,6 +225,10 @@ __ Other Changes
 
 - A better way to structure this is to place the Producer app in a
   sub-directory but let's fix that another way.
+
+- The `schema-registry` service can be excluded without problems
+    - The docker image for the `schema-registry` service is a whopping
+      1.81GB
 ..
 
 __ Notes
