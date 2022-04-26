@@ -74,7 +74,7 @@ __ 2. Create a topic
             --replication-factor 1 \
             --partitions 1
 ..
-__ Step Notes
+__ Issues and Fixes
 
 - Messed up the creation and needed to delete the topic
 
@@ -105,7 +105,7 @@ __ Step Notes
 
 __ 3. Create a `gradle.build` file for the project
 
-- See: build.gradle
+- See: [build.gradle](build.gradle)
 
 - Create the Gradle wrapper _after_ creating the build.gradle file
     - `gradle wrapper`
@@ -151,7 +151,7 @@ __ 6. Run the app
             --bootstrap-server broker:9092 \
             --from-beginning \
             --property print.key=true \
-            -property key.separator=" : "
+            --property key.separator=" : "
     ```
 ..
 
@@ -169,6 +169,61 @@ __ 7. Create tests
 
 - Check results
     - `build/reports/tests/test/index.html`
+..
+
+__ 8. Run in production as a container
+
+- Create a PROD configuration file:
+    - [configuration/prod.properties](configuration/prod.properties)
+
+- Build a docker image
+    - `gradle jibDockerBuild --image=com.firexis/kafka-producer-app:0.0.1`
+
+- Launch the container
+
+        docker run \
+            -v $PWD/configuration/prod.properties:/config.properties \
+            -v $PWD/input.txt:/input.txt \
+            com.firexis/kafka-producer-app:0.0.1 config.properties input.txt
+..
+__ Issues and Fixes
+
+- The container is built correctly but when it runs, it complains that
+  it cannot access the broker, defined as `localhost:29092` in the
+  [`configuration/prod.properties`](configuration/prod.properties) file.
+    - The problem is that zookeeper and the kafka brokers are in one
+      docker compose environment and this producer is in another
+      container and they'll not be able to talk to each other.
+
+- Probably need to create another docker-compose file with all three of
+  them
+    - Rename the original docker-compose.yml to [`dc-1.yml`](dc-1.yml)
+    - Create a new docker-compose.yml in [`dc-2.yml`](dc-2.yml)
+    - Create symlink
+        - `ln -s dc-2.yml docker-compose.yml`
+..
+__ Create a DockerFile instead of using Google Jib
+
+```
+    FROM openjdk:8-jre-alpine
+    WORKDIR /
+    COPY build/libs/kafka-producer-application-standalone-0.0.1.jar /app.jar
+    COPY configuration/prod.properties /config.properties
+    COPY input.txt /input.txt
+    CMD [ "java", "-jar /app.jar", "/config.properties", "/input.txt"]
+```
+
+- Build the docker image
+    - `docker build -t kafka-producer:0.0.2`
+        - Make sure the image matches that in the `docker-compose.yml` file
+..
+__ Other Changes
+
+- Make sure the `bootstrap.servers` properties in
+  `configuration/prod.properties` points to `broker:9092`
+
+- A better way to structure this is to place the Producer app in a
+  sub-directory but let's fix that another way.
 ..
 
 __ Notes

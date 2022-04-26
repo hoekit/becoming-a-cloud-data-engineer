@@ -24,7 +24,7 @@ plugins {
     id "java"
 
     // Containerize your Java application
-    id "com.google.cloud.tools.jib" version "3.2.0"
+    id "com.google.cloud.tools.jib" version "3.2.1"
 
     // Generate files used by IntelliJ IDEA making it possible to open
     // the project from IDEA
