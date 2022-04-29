@@ -669,6 +669,270 @@ __ **BigQuery: ML**
     ```
 ..
 
+__ **Apache BEAM**
+
+- Open-source model for batch and streaming pipelines[1]
+    - Write in *programming language of choice*
+        - Pipelines converted to *language-agnostic* representations
+    - Run in *execution engine of choice*
+        - Uses a protocol for execution
+        - Uses Docker containerization to customize execution
+
+- Use the BEAM SDK of the language of your choice
+    - Support Python, Java, Go (beta), SQL
+    - Use the same classes and transforms for both batch and streaming
+
+- Running pipelines needs a `Runner`
+    - A `Runner` is the pipeline execution engine
+    - A `Runner` can be the local CPU, remote VM or cloud provider like Dataflow
+
+- Runners
+    - Dataflow, Flink, Spark RDD, Spark Dataset, Samza, etc[2]
+
+- Links:
+    - [1] https://cloud.google.com/dataflow/docs/concepts
+    - [2] https://beam.apache.org/documentation/runners/capability-matrix/
+..
+
+__ **Dataflow Readings**
+
+- Links:
+    - [1] [What is Dataflow](https://www.youtube.com/watch?v=KalJ0VuEM7s)
+    - [2] [Dataflow Under the Hood Part 1](https://cloud.google.com/blog/products/data-analytics/how-cloud-batch-and-stream-data-processing-works)
+    - [3] [Dataflow Under the Hood Part 2](https://cloud.google.com/blog/products/data-analytics/cloud-batch-and-stream-processing-for-analytics)
+    - [4] [Dataflow Under the Hood Part 3](https://cloud.google.com/blog/products/data-analytics/dataflow-vs-other-stream-batch-processing-engines)
+
+..
+
+__ **Dataflow Runner**
+
+- Use Dataflow Runner v2[1]
+    - More efficient and portable worker
+    - Support custom containers
+
+- Custom container
+    ```
+        # DockerFile
+        FROM apache/beam_python3.8_sdk:2.25.0
+        ENV MY_FILE_NAME=my_file.txt
+        COPY path/tomyfile/$MY_FILE_NAME ./
+    ```
+- Cross-language transforms
+    - a powerful idea where cross-language transforms can be used in any
+      language
+    - caveat: one has to create these cross-language transforms first
+    - Workers VMs will need to load multiple language resources
+
+- Links:
+    - [1] https://cloud.google.com/dataflow/docs/guides/deploying-a-pipeline#dataflow-runner-v2
+    - [2] https://cloud.google.com/dataflow/docs/guides/using-custom-containers
+    - [3] https://beam.apache.org/documentation/programming-guide/#mulit-language-pipelines
+..
+
+__ **Dataflow: Separate Compute and Storage**
+
+- Does Graph Optimization
+
+- Does Autoscaling
+
+- Strong streaming semantics
+    - Can handle late arriving with Intelligent Watermarking
+
+- Shuffle Service [1]
+    - Batch pipelines only, enabled by default
+        - Reduced boot disk from 250GB to 25GB
+    - Shuffle caused by GroupByKey, CoGroupByKey and Combine
+    - A backend service, not on the Dataflow worker
+    - Faster execution time, better autoscaling, better fault tolerance
+    - Utilizing this will cost less or same
+
+- Streaming Engine [2]
+    - Similar to Shuffle Service but offloads:
+        - Window state and shuffles
+    - Enabled by default for Python SDK 2.21.0 or later using Python 3
+    - Utilizing this will cost approximate the same
+
+- Flexible Resource Scheduling (FlexRS) [3]
+    - Reduce batch processing by scheduling it to run on preemptible VMs
+      over 6 hours
+    - Not suitable for time-sensitive jobs
+    - A validation job is run first so errors are shown during job
+      submission
+
+- Links
+    - [1] https://cloud.google.com/dataflow/docs/guides/deploying-a-pipeline#dataflow-shuffle
+    - [2] https://cloud.google.com/dataflow/docs/guides/deploying-a-pipeline#streaming-engine
+    - [3] https://cloud.google.com/dataflow/docs/guides/deploying-a-pipeline#dataflow-flexible-resource-scheduling
+..
+
+__ **Dataflow: IAM and Quotas**
+
+- Job submission overview
+    - When BEAM pipeline is submitted, it is sent to two places:
+        - SDK uploads code to Cloud Storage
+        - Sends code to Dataflow Service
+    - Dataflow service
+        - Validates and optimizes the pipeline
+        - Creates the compute engines in your project to run the code
+        - Deploys code to VM
+        - Starts to gather monitoring info for display
+        - Then starts running the code
+    - IAM determines if the process should proceed
+
+- Dataflow Job Run controlled by three (3) credentials
+    - User roles
+        - Controls whether user submitting pipeline has permissions
+    - Dataflow service account
+        - Automatically created when Dataflow API enabled
+        - Checks project quota
+        - Create worker instances on your behalf
+        - Manage job during execution
+    - Controller service account
+        - Is assigned to Compute Engine VMs
+        - Automatically uses the default Compute Engine service account
+        - Used by dataflow workers to access resources needed by the
+          pipeline
+        - Recommend to use a separate service account with just the
+          Dataflow.Worker role
+        - Also add additional roles if need to access BigQuery if the
+          job access BigQuery resources
+
+- User roles
+    - Dataflow Viewer
+        - Only view jobs, monitoring
+    - Dataflow Developer
+        - Can manage dataflow jobs (view, submit, update, cancel jobs)
+        - Cannot create dataflow jobs
+    - Dataflow Admin
+        - Can create and manage dataflow jobs
+
+- Quotas
+    - Dataflow jobs consume the following quotas:
+        - vCPUs: Total vCPUs per project, per region
+            - Products that creates Compute Engine VMs consumes this
+              quota e.g. DataProc, DataFlow GKE, AI Notebooks
+            - n1-standard-1: 1 quota used
+            - n1-standard-8: 8 quota used
+        - IP-Addresses: Total External IP addresses
+            - n1-standard-1: 1 quota used
+            - n1-standard-8: 1 quota used (independent of machine type)
+            - Dataflow jobs can be configured to use internal IP
+              (defaults to external IP)
+        - Persistent Disks: Total Disks per project, per region
+            - Can choose disk type when running Dataflow jobs
+            - python `--worker_disk_type`
+            - java: `--workerDiskType`
+    - <img src="img/prep-dataflow-worker-disk-type.png" alt="" width="80%"/>
+
+- Batch Pipeline Persistent Disk Quotas
+    - One (1) VM to One (1) Persistent Disk
+    - Size if Shuffle on VM: 250 GB
+    - Size if Shuffle Service : 25 GB
+    - Can override disk size:
+        - Python: `--disk_size_gb`
+        - Java: `--diskSizeGb`
+
+- Streaming Pipeline Persistent Disk Quotas
+    - Fixed pool of persistent disks (PD)
+        - Each worker must have at least one PD attached, max 15 PD
+    - Streaming Engine PD Size: 30 GB, Default on VM: 400 GB
+    - Can override disk size:
+        - Python: `--disk_size_gb`
+        - Java: `--diskSizeGb`
+    - Disk allocated = Max number of worker
+        - Launching just 3 workers with max 10 will still allocated 10
+          disks
+
+- Links
+    - [1] https://cloud.google.com/dataflow/docs/concepts/access-control
+    - [2] https://cloud.google.com/dataflow/quotas
+..
+
+__ **Dataflow: Security**
+
+- Data locality
+    - When you launch a Dataflow job, a *backend* exists in a Google
+      managed project that deploys and controls your pipeline. This is
+      referred to the `Dataflow Endpoint`
+    - The Dataflow Endpoint exists in a few regions and can be different
+      from the region where the workers run
+    - Metadata is exchanged between the Regional Endpoint and Workers
+        - Work Items
+        - Autoscaling Events
+        - Unhandled Exceptions
+        - Job start failures
+        - Worker Item failures
+        - Compute Engine failures
+
+- Why Data locality
+    - Regulatory compliance
+        - Specify regional endpoint to keep data in same region
+    - Minimize latency and costs
+        - Metadata does not leave region hence no egress costs
+
+- Setting the regional endpoint
+    - No zone preferences
+        - Python: `--region $REGION`
+        - Java: `--region=$REGION`
+    - Run worker in a specific zone with a regional endpoint
+        - Python: `--region $REGION --worker_zone $WORKER_ZONE`
+        - Java: `--region=$REGION --workerZone=$WORKER_ZONE`
+    - Run worker in a region with no regional endpoint
+        - Python: `--region $REGION --worker_region $WORKER_REGION`
+        - Java: `--region=$REGION --workerRegion=$WORKER_REGION`
+        - The region should be the nearest to worker region
+        - No data locality
+
+- Shared VPC
+    - Dataflow jobs can be run in a custom VPC subnet
+    - Use the `--network` or `--subnetwork` argument to specify
+    - <img src="img/prep-dataflow-shared-vpc.png" alt="" width="80%"/>
+
+- Private IPs
+    - Blocks workers from accessing Public Internet
+    - Lowers IP Address Quota consumption
+    - Still possible to perform administrative and monitoring tasks on
+      Dataflow
+    - Access limited to:
+        - Instance in same VPC Network
+        - A Shared VPC Network
+        - VPC with Peering
+    - Enable Private Google Access to reach Google Cloud APIs and
+      services
+    - <img src="img/prep-dataflow-shared-vpc-private-ip.png" alt="" width="80%"/>
+
+- Customer Managed Encryption Key (CMEK)
+    - Data at rest is encrypted using a Google Managed key by default
+        - Persistent Disk
+            - For Shuffle on VM and streaming state storage
+        - Storage Buckets
+            - Pipeline code in binary
+            - Temporary store for Export and import data
+        - Dataflow Shuffle Backend
+            - If Shuffle is enabled
+        - Streaming Engine Backend
+            - If Streaming engine is used
+    - CMEK encrypts data-at-rest using customer symmetric key stored in
+      Google Cloud Key Management System (GCKMS)
+    - Job metadata encrypted by Google-managed key encryption
+        - Need to add Cloud KMS CryptoKey Encrypter/Decrypter role to
+          Dataflow service account and Controller service account
+    - <img src="img/prep-dataflow-cmek.png" alt="" width="80%"/>
+
+- Links:
+    - [1] https://cloud.google.com/dataflow/docs/concepts/security-and-permissions
+..
+
+__ **Dataflow: Use-Case Patterns**
+
+
+- Pattern: Dealing with bad data
+
+
+- Link:
+    - [1] https://cloud.google.com/blog/products/data-analytics/guide-to-common-cloud-dataflow-use-case-patterns-part-1
+..
+
 __ **Dataproc**
 
 - Dataproc clusters are ephemereal
@@ -680,19 +944,6 @@ __ **Dataproc**
 - Recommendations/Best Practices:
     - Do not attach persistend HDFS to Dataproc clusters
     - Spin up Dataproc clusters for each job as needed
-
-- 
-
-..
-
-__ **Dataflow: Use-Case Patterns**
-
-
-- Pattern: Dealing with bad data
-
-
-- Link:
-    - [1] https://cloud.google.com/blog/products/data-analytics/guide-to-common-cloud-dataflow-use-case-patterns-part-1
 ..
 
 __ **Cloud Datastore**
@@ -750,6 +1001,9 @@ __ **Machine Learning**
     - L2 Regularization penalizes high parameter values by making the
       square of the parameter values part of the mean squared error (MSE)
     - <img src="img/prep-ml-l2-regularization.png" alt="" width="80%"/>
+
+- AutoML vs BigQuery ML vs Custom Model
+    - <img src="img/prep-automl-bigquery-ml-custom-model.png" alt="" width="100%"/>
 ..
 
 __ **ML: Training Phase**
@@ -969,7 +1223,7 @@ __ **AutoML Vision**
     - Max filesize: 1.5MB
 
 - Improving Models
-    - Check the confusion matrix
+    - Check the confusion matrix[2]
     - Very low scores:
         - Increase training images
     - Very high/perfect precision scores
@@ -978,6 +1232,95 @@ __ **AutoML Vision**
 - Links:
     - AutoML Preparing your training data
         - https://cloud.google.com/vision/automl/docs/prepare
+    - [2] https://cloud.google.com/automl-tables/docs/evaluate#metrics-classification
+..
+
+__ **AutoML Natural Language**
+
+- AutoML Natural Language Intro[1]
+
+- Data Preparation
+    - .txt file in Cloud Storage
+    - 2-100 labels
+
+- Text processing capabilities
+    - Classification
+    - Entity extraction
+    - Sentiment analysis
+
+- Limitations
+    - Documents cannot contain Unicode
+    - Maximum of 128 kilobytes
+    - 2-100 labels
+
+- Evaluation[2]
+    - Uses average precision i.e.
+        - the precision recall curve (AUC PR) must be between 0.5 to 1.0
+    - Also supplies confidence threshold curves
+    - High Confusion and low average precision scores
+        - means prepared dataset need more entries or labels are used
+          inconsistently
+
+- How to improve low quality evaluations for a particular label
+    - Add more entries associated with those labels
+    - Increase document variety e.g. document length, authors
+    - Reduce low quality labels
+
+- Model Deletion
+    - When unused for 60 days
+    - When in use, deleted after 6 months
+
+Retraining
+    - Helps to preserve a model
+
+- Links
+    - [1] https://cloud.google.com/natural-language/automl/docs/beginners-guide
+    - [2] https://cloud.google.com/natural-language/automl/docs/evaluate
+
+..
+
+__ **AutoML Table**
+
+- AutoML Tables docs[1] and Qwiklabs video[2]
+
+- Technically
+    - Applied image classification and translation techniques to tabular data
+    - A supervised learning service (both classification and regression)
+
+- Data Import
+    - BigQuery or CSV
+    - BigQuery supports ARRAYs and STRUCTs
+    - Between 1000 - 100M rows
+    - Between 2-1000 columns
+    - Less than 100GiB in size
+
+- Data Validation
+    - Check/remove rows with too many nulls
+    - Check/remove outlier columns
+    - Check/remove unrelated/uncorrelated columns
+
+- Set budget in node hours
+    - AutoML stops automatically when there's little gain
+
+- Classification Metrics
+    - Include AUR PR
+    - Confusion matrix
+    - Feature importance
+    - Increase score threshold from default 0.5
+
+- Regression Metrics
+    - RMSE, Mean absolute error
+    - Feature importance
+    - Feature importances
+
+- Deployment
+    - Online: cURL, Java, Python, Node
+    - Batch: cURL, Java, Python Node
+        - Files smaller than 100GB
+
+- Link:
+    - [1] https://cloud.google.com/automl-tables/docs/beginners-guide
+    - [2] https://www.youtube.com/watch?v=uFvxPT3rm8g
 ..
 
 __ **Data Studio**
