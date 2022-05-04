@@ -1,0 +1,5 @@
+# Skip virtual environment
+df-env
+
+# Skip generated output files
+out.json*
